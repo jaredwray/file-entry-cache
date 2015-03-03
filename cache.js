@@ -69,6 +69,18 @@ module.exports = {
       },
 
       /**
+       * Remove an entry from the file-entry-cache. Useful to force the file to still be considered
+       * modified the next time the process is run
+       *
+       * @method removeEntry
+       * @param entryName
+       */
+      removeEntry: function (entryName) {
+        delete normalizedEntries[entryName];
+        cache.removeKey(entryName);
+      },
+
+      /**
        * Delete the cache file from the disk
        * @method deleteCacheFile
        */

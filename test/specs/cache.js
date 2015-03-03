@@ -97,6 +97,30 @@ describe('flat-cache', function () {
 
   });
 
+  it('should allow to delete an entry from the cache so the next time `getUpdatedFiles` is called the entry will be considered modified', function ( ){
+    cache = fileEntryCache.create('testCache');
+
+    var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+    var oFiles = cache.getUpdatedFiles(files);
+
+    expect(oFiles).to.deep.equal(files);
+
+    cache.removeEntry(path.resolve(__dirname, '../fixtures/f1.txt'));
+
+    cache.reconcile();
+
+    // modify a file
+    write(path.resolve(fixturesDir, fixtureFiles[1].name), fixtureFiles[1].content + 'modified!!!');
+
+    cache = fileEntryCache.create('testCache');
+
+    oFiles = cache.getUpdatedFiles(files);
+
+    expect(oFiles).to.deep.equal([path.resolve(__dirname, '../fixtures/f1.txt'), path.resolve(__dirname, '../fixtures/f2.txt')]);
+
+    cache.deleteCacheFile();
+  });
+
   it('should not fail if an array is not passed to the `getChangedFiles` method', function (){
     cache = fileEntryCache.create('testCache2');
     var files = cache.getUpdatedFiles(null);

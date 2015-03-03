@@ -38,6 +38,12 @@ var cache2 = fileEntryCache.create('testCache');
 // if no files were modified previous to the execution of this function
 var oFiles = cache.getUpdatedFiles(files);  
 
+// if you want to prevent a file from being considered non modified
+// something useful if a file failed some sort of validation
+// you can then remove the entry from the cache doing
+cache.removeEntry('path/to/file'); // path to file should be the same path of the file received on `getUpdatedFiles`
+// that will effectively make the file to appear again as modified until the validation is passed. In that
+// case you should not remove it from the cache
 
 // if you need all the files, so you can determine what to do with the changed ones
 // you can call
