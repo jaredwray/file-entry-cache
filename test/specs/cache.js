@@ -1,208 +1,245 @@
-describe('flat-cache', function () {
+describe( 'flat-cache', function () {
   'use strict';
-  var expect = require('chai').expect;
-  var path = require('path');
-  var write = require('write').sync;
-  var read = require('read-file').readFileSync;
-  var expand = require('glob-expand');
-  var fileEntryCache = require('../../cache');
+  var expect = require( 'chai' ).expect;
+  var path = require( 'path' );
+  var write = require( 'write' ).sync;
+  var read = require( 'read-file' ).readFileSync;
+  var expand = require( 'glob-expand' );
+  var fileEntryCache = require( '../../cache' );
 
-  var fixturesDir = path.resolve(__dirname, '../fixtures');
-  var del = require('del').sync;
+  var fixturesDir = path.resolve( __dirname, '../fixtures' );
+  var del = require( 'del' ).sync;
 
-  var fixtureFiles = [{
-    name: 'f1.txt',
-    content: 'some content 1'
-  }, {
-    name: 'f2.txt',
-    content: 'some content 2'
-  }, {
-    name: 'f3.txt',
-    content: 'some content 3'
-  }, {
-    name: 'f4.txt',
-    content: 'some content 4'
-  }];
+  var fixtureFiles = [
+    {
+      name: 'f1.txt',
+      content: 'some content 1'
+    },
+    {
+      name: 'f2.txt',
+      content: 'some content 2'
+    },
+    {
+      name: 'f3.txt',
+      content: 'some content 3'
+    },
+    {
+      name: 'f4.txt',
+      content: 'some content 4'
+    }
+  ];
 
   var cache;
 
   var delCacheAndFiles = function () {
-    del(fixturesDir, {
+    del( fixturesDir, {
       force: true
-    });
+    } );
     cache && cache.deleteCacheFile();
   };
 
-  beforeEach(function () {
+  beforeEach( function () {
     delCacheAndFiles();
 
-    fixtureFiles.forEach(function (f) {
-      write(path.resolve(fixturesDir, f.name), f.content);
-    });
-  });
+    fixtureFiles.forEach( function ( f ) {
+      write( path.resolve( fixturesDir, f.name ), f.content );
+    } );
+  } );
 
-  afterEach(function() {
+  afterEach( function () {
     delCacheAndFiles();
-  });
+  } );
 
-  it('should return the array of files passed the first time since there was no cache created', function () {
+  it( 'should create a file entry cache using a file path', function () {
+    cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
+    var fs = require('fs');
+    var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+    var oFiles = cache.getUpdatedFiles( files );
 
-    cache = fileEntryCache.create('testCache');
+    expect( oFiles ).to.deep.equal( files );
 
-    var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-    var oFiles = cache.getUpdatedFiles(files);
-
-    expect(oFiles).to.deep.equal(files);
-
-  });
-
-  it('should return none, if no files were modified', function () {
-    cache = fileEntryCache.create('testCache');
-
-    var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-    var oFiles = cache.getUpdatedFiles(files);
-
-    expect(oFiles).to.deep.equal(files);
+    expect( fs.existsSync('../fixtures/.eslintcache')).to.be.false;
 
     cache.reconcile();
 
-    oFiles = cache.getUpdatedFiles(files);
-    expect(oFiles).to.deep.equal([]);
+    expect( fs.existsSync('../fixtures/.eslintcache')).to.be.true;
+
+    cache.destroy();
+
+    expect( fs.existsSync('../fixtures/.eslintcache')).to.be.false;
+  });
+
+  it( 'should return the array of files passed the first time since there was no cache created', function () {
+
+    cache = fileEntryCache.create( 'testCache' );
+
+    var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+    var oFiles = cache.getUpdatedFiles( files );
+
+    expect( oFiles ).to.deep.equal( files );
+
+  } );
+
+  it( 'should return none, if no files were modified', function () {
+    cache = fileEntryCache.create( 'testCache' );
+
+    var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+    var oFiles = cache.getUpdatedFiles( files );
+
+    expect( oFiles ).to.deep.equal( files );
+
+    cache.reconcile();
+
+    oFiles = cache.getUpdatedFiles( files );
+    expect( oFiles ).to.deep.equal( [] );
 
     cache.deleteCacheFile();
 
-  });
+  } );
 
-  it('should return only modified files the second time the method is called', function () {
+  it( 'should return only modified files the second time the method is called', function () {
 
-    cache = fileEntryCache.create('testCache');
+    cache = fileEntryCache.create( 'testCache' );
 
-    var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-    var oFiles = cache.getUpdatedFiles(files);
+    var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+    var oFiles = cache.getUpdatedFiles( files );
 
-    expect(oFiles).to.deep.equal(files);
+    expect( oFiles ).to.deep.equal( files );
 
     cache.reconcile();
 
     // modify a file
-    write(path.resolve(fixturesDir, fixtureFiles[1].name), fixtureFiles[1].content + 'modified!!!');
+    write( path.resolve( fixturesDir, fixtureFiles[ 1 ].name ), fixtureFiles[ 1 ].content + 'modified!!!' );
 
-    cache = fileEntryCache.create('testCache');
+    cache = fileEntryCache.create( 'testCache' );
 
-    oFiles = cache.getUpdatedFiles(files);
+    oFiles = cache.getUpdatedFiles( files );
 
-    expect(oFiles).to.deep.equal([path.resolve(__dirname, '../fixtures/f2.txt')]);
+    expect( oFiles ).to.deep.equal( [
+      path.resolve( __dirname, '../fixtures/f2.txt' )
+    ] );
 
     cache.deleteCacheFile();
 
-  });
+  } );
 
-  it('should allow to delete an entry from the cache so the next time `getUpdatedFiles` is called the entry will be considered modified', function ( ){
-    cache = fileEntryCache.create('testCache');
+  it( 'should allow to delete an entry from the cache so the next time `getUpdatedFiles` is called the entry will be considered modified', function () {
+    cache = fileEntryCache.create( 'testCache' );
 
-    var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-    var oFiles = cache.getUpdatedFiles(files);
+    var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+    var oFiles = cache.getUpdatedFiles( files );
 
-    expect(oFiles).to.deep.equal(files);
+    expect( oFiles ).to.deep.equal( files );
 
-    cache.removeEntry(path.resolve(__dirname, '../fixtures/f1.txt'));
+    cache.removeEntry( path.resolve( __dirname, '../fixtures/f1.txt' ) );
 
     cache.reconcile();
 
     // modify a file
-    write(path.resolve(fixturesDir, fixtureFiles[1].name), fixtureFiles[1].content + 'modified!!!');
+    write( path.resolve( fixturesDir, fixtureFiles[ 1 ].name ), fixtureFiles[ 1 ].content + 'modified!!!' );
 
-    cache = fileEntryCache.create('testCache');
+    cache = fileEntryCache.create( 'testCache' );
 
-    oFiles = cache.getUpdatedFiles(files);
+    oFiles = cache.getUpdatedFiles( files );
 
-    expect(oFiles).to.deep.equal([path.resolve(__dirname, '../fixtures/f1.txt'), path.resolve(__dirname, '../fixtures/f2.txt')]);
+    expect( oFiles ).to.deep.equal( [
+      path.resolve( __dirname, '../fixtures/f1.txt' ),
+      path.resolve( __dirname, '../fixtures/f2.txt' )
+    ] );
 
     cache.deleteCacheFile();
-  });
+  } );
 
-  it('should not fail if an array is not passed to the `getChangedFiles` method', function (){
-    cache = fileEntryCache.create('testCache2');
-    var files = cache.getUpdatedFiles(null);
+  it( 'should not fail if an array is not passed to the `getChangedFiles` method', function () {
+    cache = fileEntryCache.create( 'testCache2' );
+    var files = cache.getUpdatedFiles( null );
     cache.reconcile();
-    expect(files).to.deep.equal([]);
-  });
+    expect( files ).to.deep.equal( [] );
+  } );
 
-  it('should not fail if calling reconcile without a prior call to `getChangedFiles` or `normalizeEntries`', function (){
-    cache = fileEntryCache.create('testCache2');
+  it( 'should not fail if calling reconcile without a prior call to `getChangedFiles` or `normalizeEntries`', function () {
+    cache = fileEntryCache.create( 'testCache2' );
 
-    expect(function () {
+    expect( function () {
       cache.reconcile();
-    }).not.to.throw;
-  });
+    } ).not.to.throw;
+  } );
 
-  describe('normalizeEntries', function () {
-    it('should return fileDescriptor for all the passed files', function () {
-      cache = fileEntryCache.create('testCache');
+  describe( 'normalizeEntries', function () {
+    it( 'should return fileDescriptor for all the passed files', function () {
+      cache = fileEntryCache.create( 'testCache' );
 
-      var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-      var oFiles = cache.normalizeEntries(files);
+      var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+      var oFiles = cache.normalizeEntries( files );
 
-      expect(oFiles.length).to.equal(4);
-      oFiles.forEach(function (file) {
-        expect(file.changed).to.be.true;
-      });
+      expect( oFiles.length ).to.equal( 4 );
+      oFiles.forEach( function ( file ) {
+        expect( file.changed ).to.be.true;
+      } );
 
-    });
+    } );
 
-    it('should return fileDescriptor for all the passed files', function () {
-      cache = fileEntryCache.create('testCache');
+    it( 'should return fileDescriptor for all the passed files', function () {
+      cache = fileEntryCache.create( 'testCache' );
 
-      var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-      var oFiles = cache.normalizeEntries(files);
+      var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+      var oFiles = cache.normalizeEntries( files );
 
       cache.reconcile();
 
       // modify a file
-      write(path.resolve(fixturesDir, fixtureFiles[2].name), fixtureFiles[2].content + 'modified!!!');
+      write( path.resolve( fixturesDir, fixtureFiles[ 2 ].name ), fixtureFiles[ 2 ].content + 'modified!!!' );
 
-      oFiles = cache.normalizeEntries(files);
+      oFiles = cache.normalizeEntries( files );
 
-      expect(oFiles.length).to.equal(4);
+      expect( oFiles.length ).to.equal( 4 );
 
-      var changedFile = oFiles.filter(function (entry) {
+      var changedFile = oFiles.filter( function ( entry ) {
         return entry.changed;
-      });
+      } );
 
-      expect(changedFile[0].key).to.contains(fixtureFiles[2].name);
-    });
+      expect( changedFile[ 0 ].key ).to.contains( fixtureFiles[ 2 ].name );
+    } );
 
-    it('should not fail if a null array of files is passed', function () {
-      cache = fileEntryCache.create('testCache');
-      var oFiles = cache.normalizeEntries(null);
-      expect(oFiles).to.deep.equal([]);
-    });
+    it( 'should not fail if a null array of files is passed', function () {
+      cache = fileEntryCache.create( 'testCache' );
+      var oFiles = cache.normalizeEntries( null );
+      expect( oFiles ).to.deep.equal( [] );
+    } );
 
-  });
+  } );
 
-  describe('saving custom metadata', function () {
+  describe( 'saving custom metadata', function () {
     var cache2;
-    afterEach(function () {
+    afterEach( function () {
       cache2 && cache2.deleteCacheFile();
-    });
+    } );
 
-    it('should allow persist custom data in the entries', function () {
-      cache = fileEntryCache.create('cache-1');
+    it( 'should allow persist custom data in the entries', function () {
+      cache = fileEntryCache.create( 'cache-1' );
 
-      var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-      var entries = cache.normalizeEntries(files);
+      var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+      var entries = cache.normalizeEntries( files );
 
-      entries[1].meta.data = { foo: 'bar' };
-      entries[2].meta.data = { baz: { some: 'foo' } };
+      entries[ 1 ].meta.data = {
+        foo: 'bar'
+      };
+      entries[ 2 ].meta.data = {
+        baz: {
+          some: 'foo'
+        }
+      };
 
       cache.reconcile();
 
-      cache2 = fileEntryCache.create('cache-1');
-      entries = cache2.normalizeEntries(files);
+      cache2 = fileEntryCache.create( 'cache-1' );
+      entries = cache2.normalizeEntries( files );
 
-      expect(entries[1].meta.data.foo).to.equal('bar');
-      expect(entries[2].meta.data.baz).to.deep.equal({ some: 'foo'});
+      expect( entries[ 1 ].meta.data.foo ).to.equal( 'bar' );
+      expect( entries[ 2 ].meta.data.baz ).to.deep.equal( {
+        some: 'foo'
+      } );
 
-    });
-  });
-});
+    } );
+  } );
+} );

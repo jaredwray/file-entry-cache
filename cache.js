@@ -1,9 +1,16 @@
+var path = require( 'path' );
+
 module.exports = {
+  createFromFile: function ( filePath ) {
+    var fname = path.basename( filePath );
+    var dir = path.dirname( filePath );
+    return this.create( fname, dir );
+  },
   create: function ( cacheId, path ) {
     var fs = require( 'fs' );
     var flatCache = require( 'flat-cache' );
     var cache = flatCache.load( cacheId, path );
-    var assign = require('lodash.assign');
+    var assign = require( 'lodash.assign' );
     var normalizedEntries = {};
 
     return {
@@ -21,9 +28,9 @@ module.exports = {
 
         return me.normalizeEntries( files ).filter( function ( entry ) {
           return entry.changed;
-        }).map(function (entry) {
+        } ).map( function ( entry ) {
           return entry.key;
-        });
+        } );
       },
 
       /**
@@ -32,37 +39,35 @@ module.exports = {
        * @param files
        * @returns {*}
        */
-      normalizeEntries: function (files) {
+      normalizeEntries: function ( files ) {
         files = files || [];
 
-        var nEntries = files.map(function (file) {
-          var meta = cache.getKey(file);
+        var nEntries = files.map( function ( file ) {
+          var meta = cache.getKey( file );
           var cacheExists = !!meta;
-          var fstat = fs.statSync(file);
+          var fstat = fs.statSync( file );
 
           var cSize = fstat.size;
           var cTime = fstat.mtime.getTime();
 
-          if (!meta) {
+          if ( !meta ) {
             meta = {
               size: cSize,
               mtime: cTime
             }
-          }
-          else {
+          } else {
             var isDifferentDate = cTime !== meta.mtime;
             var isDifferentSize = cSize !== meta.size;
           }
 
-          var nEntry = normalizedEntries[file] = {
+          var nEntry = normalizedEntries[ file ] = {
             key: file,
-            changed : !cacheExists || isDifferentDate || isDifferentSize,
+            changed: !cacheExists || isDifferentDate || isDifferentSize,
             meta: meta
           };
 
           return nEntry;
-
-        });
+        } );
 
         //normalizeEntries = nEntries;
         return nEntries;
@@ -75,9 +80,9 @@ module.exports = {
        * @method removeEntry
        * @param entryName
        */
-      removeEntry: function (entryName) {
-        delete normalizedEntries[entryName];
-        cache.removeKey(entryName);
+      removeEntry: function ( entryName ) {
+        delete normalizedEntries[ entryName ];
+        cache.removeKey( entryName );
       },
 
       /**
@@ -85,9 +90,17 @@ module.exports = {
        * @method deleteCacheFile
        */
       deleteCacheFile: function () {
-        flatCache.clearCacheById(cacheId);
+        cache.removeCacheFile();
+      //flatCache.clearCacheById(cacheId);
       },
 
+      /**
+       * remove the cache from the file and clear the memory cache
+       */
+      destroy: function () {
+        normalizedEntries = {};
+        cache.destroy();
+      },
       /**
        * Sync the files and persist them to the cache
        *
@@ -96,18 +109,18 @@ module.exports = {
       reconcile: function () {
         var entries = normalizedEntries;
 
-        var keys = Object.keys(entries);
-        if (keys.length === 0) {
+        var keys = Object.keys( entries );
+        if ( keys.length === 0 ) {
           return;
         }
         keys.forEach( function ( entryName ) {
-          var cacheEntry = entries[entryName];
+          var cacheEntry = entries[ entryName ];
           var stat = fs.statSync( cacheEntry.key );
 
-          var meta = assign(cacheEntry.meta, {
+          var meta = assign( cacheEntry.meta, {
             size: stat.size,
             mtime: stat.mtime.getTime()
-          });
+          } );
 
           cache.setKey( entryName, meta );
         } );

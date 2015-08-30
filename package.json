@@ -43,7 +43,7 @@
     "write": "^0.1.1"
   },
   "dependencies": {
-    "flat-cache": "^1.0.3",
+    "flat-cache": "^1.0.4",
     "lodash.assign": "^3.0.0"
   }
 }
