@@ -50,24 +50,56 @@ describe( 'flat-cache', function () {
     delCacheAndFiles();
   } );
 
+  describe( 'hasFileChanged', function () {
+    it( 'should determine if a file has changed since last time reconcile was called', function () {
+      cache = fileEntryCache.createFromFile( '../fixtures/.eslintcache' );
+
+      var file = path.resolve( __dirname, '../fixtures/f4.txt' );
+
+      // not called yet reconcile so all the files passed will be returned as changed
+      // provided that the file actually exists
+      expect( cache.hasFileChanged( file ) ).to.be.true;
+
+      // since reconcile has not being called this should be true
+      expect( cache.hasFileChanged( file ) ).to.be.true;
+
+      cache.reconcile();
+
+      // since reconcile was called then this should be false
+      expect( cache.hasFileChanged( file ) ).to.be.false;
+
+      // attempt to do a modification
+      write( file, 'some other content' );
+
+      expect( cache.hasFileChanged( file ) ).to.be.true;
+
+      cache.reconcile();
+
+      //write( file, 'some different content');
+
+      expect( cache.hasFileChanged( file ) ).to.be.false;
+
+    } );
+  } );
+
   it( 'should create a file entry cache using a file path', function () {
-    cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
-    var fs = require('fs');
+    cache = fileEntryCache.createFromFile( '../fixtures/.eslintcache' );
+    var fs = require( 'fs' );
     var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
     var oFiles = cache.getUpdatedFiles( files );
 
     expect( oFiles ).to.deep.equal( files );
 
-    expect( fs.existsSync('../fixtures/.eslintcache')).to.be.false;
+    expect( fs.existsSync( '../fixtures/.eslintcache' ) ).to.be.false;
 
     cache.reconcile();
 
-    expect( fs.existsSync('../fixtures/.eslintcache')).to.be.true;
+    expect( fs.existsSync( '../fixtures/.eslintcache' ) ).to.be.true;
 
     cache.destroy();
 
-    expect( fs.existsSync('../fixtures/.eslintcache')).to.be.false;
-  });
+    expect( fs.existsSync( '../fixtures/.eslintcache' ) ).to.be.false;
+  } );
 
   it( 'should return the array of files passed the first time since there was no cache created', function () {
 

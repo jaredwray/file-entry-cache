@@ -15,6 +15,43 @@ module.exports = {
 
     return {
       /**
+       * Return whether or not a file has changed since last time reconcile was called.
+       * @method hasFileChanged
+       * @param  {String}  file  the filepath to check
+       * @return {Boolean}       wheter or not the file has changed
+       */
+      hasFileChanged: function ( file ) {
+        return this.getFileDescriptor( file ).changed;
+      },
+
+      getFileDescriptor: function ( file ) {
+        var meta = cache.getKey( file );
+        var cacheExists = !!meta;
+        var fstat = fs.statSync( file );
+
+        var cSize = fstat.size;
+        var cTime = fstat.mtime.getTime();
+
+        if ( !meta ) {
+          meta = {
+            size: cSize,
+            mtime: cTime
+          }
+        } else {
+          var isDifferentDate = cTime !== meta.mtime;
+          var isDifferentSize = cSize !== meta.size;
+        }
+
+        var nEntry = normalizedEntries[ file ] = {
+          key: file,
+          changed: !cacheExists || isDifferentDate || isDifferentSize,
+          meta: meta
+        };
+
+        return nEntry;
+      },
+
+      /**
        * Return the list o the files that changed compared
        * against the ones stored in the cache
        *
@@ -42,31 +79,9 @@ module.exports = {
       normalizeEntries: function ( files ) {
         files = files || [];
 
+        var me = this;
         var nEntries = files.map( function ( file ) {
-          var meta = cache.getKey( file );
-          var cacheExists = !!meta;
-          var fstat = fs.statSync( file );
-
-          var cSize = fstat.size;
-          var cTime = fstat.mtime.getTime();
-
-          if ( !meta ) {
-            meta = {
-              size: cSize,
-              mtime: cTime
-            }
-          } else {
-            var isDifferentDate = cTime !== meta.mtime;
-            var isDifferentSize = cSize !== meta.size;
-          }
-
-          var nEntry = normalizedEntries[ file ] = {
-            key: file,
-            changed: !cacheExists || isDifferentDate || isDifferentSize,
-            meta: meta
-          };
-
-          return nEntry;
+          return me.getFileDescriptor( file );
         } );
 
         //normalizeEntries = nEntries;
