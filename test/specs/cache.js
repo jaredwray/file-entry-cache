@@ -1,4 +1,4 @@
-describe( 'flat-cache', function () {
+describe( 'file-entry-cache', function () {
   'use strict';
   var expect = require( 'chai' ).expect;
   var path = require( 'path' );

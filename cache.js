@@ -6,12 +6,13 @@ module.exports = {
     var dir = path.dirname( filePath );
     return this.create( fname, dir );
   },
-  create: function ( cacheId, path ) {
+
+  create: function ( cacheId, _path ) {
     var fs = require( 'fs' );
     var flatCache = require( 'flat-cache' );
-    var cache = flatCache.load( cacheId, path );
+    var cache = flatCache.load( cacheId, _path );
     var assign = require( 'lodash.assign' );
-    var normalizedEntries = {};
+    var normalizedEntries = { };
 
     return {
       /**
@@ -24,19 +25,57 @@ module.exports = {
         return this.getFileDescriptor( file ).changed;
       },
 
+      /**
+       * given an array of file paths it return and object with three arrays:
+       *  - changedFiles: Files that changed since previous run
+       *  - notChangedFiles: Files that haven't change
+       *  - notFoundFiles: Files that were not found, probably deleted
+       *
+       * @param  {Array} files the files to analyze and compare to the previous seen files
+       * @return {[type]}       [description]
+       */
+      analyzeFiles: function ( files ) {
+        var me = this;
+        files = files || [ ];
+
+        var res = {
+          changedFiles: [],
+          notFoundFiles: [],
+          notChangedFiles: []
+        };
+
+        me.normalizeEntries( files ).forEach( function ( entry ) {
+          if ( entry.changed ) {
+            res.changedFiles.push( entry.key );
+            return;
+          }
+          if ( entry.notFound ) {
+            res.notFoundFiles.push( entry.key );
+            return;
+          }
+          res.notChangedFiles.push( entry.key );
+        } );
+        return res;
+      },
+
       getFileDescriptor: function ( file ) {
         var meta = cache.getKey( file );
         var cacheExists = !!meta;
-        var fstat = fs.statSync( file );
+        var fstat;
+        var me = this;
+
+        try {
+          fstat = fs.statSync( file );
+        } catch (ex) {
+          me.removeEntry( file );
+          return { key: file, notFound: true, err: ex };
+        }
 
         var cSize = fstat.size;
         var cTime = fstat.mtime.getTime();
 
         if ( !meta ) {
-          meta = {
-            size: cSize,
-            mtime: cTime
-          }
+          meta = { size: cSize, mtime: cTime };
         } else {
           var isDifferentDate = cTime !== meta.mtime;
           var isDifferentSize = cSize !== meta.size;
@@ -61,7 +100,7 @@ module.exports = {
        */
       getUpdatedFiles: function ( files ) {
         var me = this;
-        files = files || [];
+        files = files || [ ];
 
         return me.normalizeEntries( files ).filter( function ( entry ) {
           return entry.changed;
@@ -77,7 +116,7 @@ module.exports = {
        * @returns {*}
        */
       normalizeEntries: function ( files ) {
-        files = files || [];
+        files = files || [ ];
 
         var me = this;
         var nEntries = files.map( function ( file ) {
@@ -113,7 +152,7 @@ module.exports = {
        * remove the cache from the file and clear the memory cache
        */
       destroy: function () {
-        normalizedEntries = {};
+        normalizedEntries = { };
         cache.destroy();
       },
       /**
