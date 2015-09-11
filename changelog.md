@@ -1,5 +1,10 @@
 
 # file-entry-cache - Changelog
+## v1.2.3
+- **Build Scripts Changes**
+  - update flat-cache dep - [cc7b9ce]( https://github.com/royriojas/file-entry-cache/commit/cc7b9ce ), [royriojas](https://github.com/royriojas), 11/09/2015 18:04:44
+
+    
 ## v1.2.2
 - **Build Scripts Changes**
   - Add changelogx section to package.json - [a3916ff]( https://github.com/royriojas/file-entry-cache/commit/a3916ff ), [royriojas](https://github.com/royriojas), 11/09/2015 18:00:26
