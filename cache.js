@@ -11,7 +11,7 @@ module.exports = {
     var fs = require( 'fs' );
     var flatCache = require( 'flat-cache' );
     var cache = flatCache.load( cacheId, _path );
-    var assign = require( 'lodash.assign' );
+    var assign = require( 'object-assign' );
     var normalizedEntries = { };
 
     return {

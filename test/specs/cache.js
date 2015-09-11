@@ -4,8 +4,13 @@ describe( 'file-entry-cache', function () {
   var path = require( 'path' );
   var write = require( 'write' ).sync;
   var read = require( 'read-file' ).readFileSync;
-  var expand = require( 'glob-expand' );
   var fileEntryCache = require( '../../cache' );
+
+  function expand() {
+    return require( 'glob-expand' ).apply(null, arguments).map(function (file) {
+      return file.split('/').join(path.sep);
+    });
+  };
 
   var fixturesDir = path.resolve( __dirname, '../fixtures' );
   var del = require( 'del' ).sync;
