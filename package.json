@@ -79,7 +79,7 @@
     "write": "^0.2.1"
   },
   "dependencies": {
-    "flat-cache": "^1.0.8",
+    "flat-cache": "^1.0.9",
     "object-assign": "^4.0.1"
   }
 }
