@@ -16,6 +16,11 @@ module.exports = {
 
     return {
       /**
+       * the flat cache storage used to persist the metadata of the files
+       * @type {Object}
+       */
+      cache: cache,
+      /**
        * Return whether or not a file has changed since last time reconcile was called.
        * @method hasFileChanged
        * @param  {String}  file  the filepath to check
@@ -145,7 +150,6 @@ module.exports = {
        */
       deleteCacheFile: function () {
         cache.removeCacheFile();
-      //flatCache.clearCacheById(cacheId);
       },
 
       /**
