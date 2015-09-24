@@ -1,5 +1,10 @@
 
 # file-entry-cache - Changelog
+## v1.2.4
+- **Enhancements**
+  - Expose the flat-cache instance - [f34c557]( https://github.com/royriojas/file-entry-cache/commit/f34c557 ), [royriojas](https://github.com/royriojas), 23/09/2015 20:26:33
+
+    
 ## v1.2.3
 - **Build Scripts Changes**
   - update flat-cache dep - [cc7b9ce]( https://github.com/royriojas/file-entry-cache/commit/cc7b9ce ), [royriojas](https://github.com/royriojas), 11/09/2015 18:04:44
