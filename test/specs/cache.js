@@ -3,14 +3,13 @@ describe( 'file-entry-cache', function () {
   var expect = require( 'chai' ).expect;
   var path = require( 'path' );
   var write = require( 'write' ).sync;
-  var read = require( 'read-file' ).readFileSync;
   var fileEntryCache = require( '../../cache' );
 
   function expand() {
-    return require( 'glob-expand' ).apply(null, arguments).map(function (file) {
-      return file.split('/').join(path.sep);
-    });
-  };
+    return require( 'glob-expand' ).apply( null, arguments ).map( function ( file ) {
+      return file.split( '/' ).join( path.sep );
+    } );
+  }
 
   var fixturesDir = path.resolve( __dirname, '../fixtures' );
   var del = require( 'del' ).sync;
@@ -37,9 +36,7 @@ describe( 'file-entry-cache', function () {
   var cache;
 
   var delCacheAndFiles = function () {
-    del( fixturesDir, {
-      force: true
-    } );
+    del( fixturesDir, { force: true } );
     cache && cache.deleteCacheFile();
   };
 
@@ -79,8 +76,6 @@ describe( 'file-entry-cache', function () {
       expect( cache.hasFileChanged( file ) ).to.be.true;
 
       cache.reconcile();
-
-      //write( file, 'some different content');
 
       expect( cache.hasFileChanged( file ) ).to.be.false;
 
@@ -128,7 +123,7 @@ describe( 'file-entry-cache', function () {
     cache.reconcile();
 
     oFiles = cache.getUpdatedFiles( files );
-    expect( oFiles ).to.deep.equal( [] );
+    expect( oFiles ).to.deep.equal( [ ] );
 
     cache.deleteCacheFile();
 
@@ -191,7 +186,7 @@ describe( 'file-entry-cache', function () {
     cache = fileEntryCache.create( 'testCache2' );
     var files = cache.getUpdatedFiles( null );
     cache.reconcile();
-    expect( files ).to.deep.equal( [] );
+    expect( files ).to.deep.equal( [ ] );
   } );
 
   it( 'should not fail if calling reconcile without a prior call to `getChangedFiles` or `normalizeEntries`', function () {
@@ -213,6 +208,62 @@ describe( 'file-entry-cache', function () {
       oFiles.forEach( function ( file ) {
         expect( file.changed ).to.be.true;
       } );
+
+    } );
+
+    it( 'should remove non visited entries from the cache', function () {
+      cache = fileEntryCache.create( 'testCache' );
+
+      var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+      cache.normalizeEntries( files );
+
+      cache.reconcile();
+
+      // the f2.txt file is in the cache
+      expect( cache.cache.getKey( path.resolve( __dirname, '../fixtures/f2.txt' ) ) ).to.not.equal( undefined );
+
+      // load the cache again
+      cache = fileEntryCache.create( 'testCache' );
+
+      // when recently loaded all entries are in the cache
+      expect( cache.cache.keys().length ).to.equal( 4 );
+
+      // we check only one file
+      expect( cache.hasFileChanged( path.resolve( __dirname, '../fixtures/f4.txt' ) ) ).to.be.false;
+
+      cache.reconcile();
+
+      // after reconcile we will only have 1 key because we just visited one entry
+      expect( cache.cache.getKey( path.resolve( __dirname, '../fixtures/f2.txt' ) ) ).to.equal( undefined );
+      expect( cache.cache.keys().length ).to.equal( 1 );
+
+    } );
+
+    it( 'should not remove visited entries from the cache if reconcile is called with noPrune=true', function () {
+      cache = fileEntryCache.create( 'testCache' );
+
+      var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+      cache.normalizeEntries( files );
+
+      cache.reconcile();
+
+      // the f2.txt file is in the cache
+      expect( cache.cache.getKey( path.resolve( __dirname, '../fixtures/f2.txt' ) ) ).to.not.equal( undefined );
+
+      // load the cache again
+      cache = fileEntryCache.create( 'testCache' );
+
+      // when recently loaded all entries are in the cache
+      expect( cache.cache.keys().length ).to.equal( 4 );
+
+      // we check only one file
+      expect( cache.hasFileChanged( path.resolve( __dirname, '../fixtures/f4.txt' ) ) ).to.be.false;
+
+      cache.reconcile( true );
+
+      // after reconcile we will only have 1 key because we just visited one entry
+      expect( cache.cache.getKey( path.resolve( __dirname, '../fixtures/f2.txt' ) ) ).to.not.equal( undefined );
+      expect( cache.cache.keys().length ).to.equal( 4 );
 
     } );
 
@@ -241,7 +292,7 @@ describe( 'file-entry-cache', function () {
     it( 'should not fail if a null array of files is passed', function () {
       cache = fileEntryCache.create( 'testCache' );
       var oFiles = cache.normalizeEntries( null );
-      expect( oFiles ).to.deep.equal( [] );
+      expect( oFiles ).to.deep.equal( [ ] );
     } );
 
   } );
@@ -258,9 +309,7 @@ describe( 'file-entry-cache', function () {
       var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
       var entries = cache.normalizeEntries( files );
 
-      entries[ 1 ].meta.data = {
-        foo: 'bar'
-      };
+      entries[ 1 ].meta.data = { foo: 'bar' };
       entries[ 2 ].meta.data = {
         baz: {
           some: 'foo'
