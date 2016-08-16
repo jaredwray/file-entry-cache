@@ -211,7 +211,7 @@ describe( 'file-entry-cache', function () {
 
     } );
 
-    it( 'should remove non visited entries from the cache', function () {
+    it( 'should not remove non visited entries from the cache', function () {
       cache = fileEntryCache.create( 'testCache' );
 
       var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
@@ -234,36 +234,45 @@ describe( 'file-entry-cache', function () {
       cache.reconcile();
 
       // after reconcile we will only have 1 key because we just visited one entry
-      expect( cache.cache.getKey( path.resolve( __dirname, '../fixtures/f2.txt' ) ) ).to.equal( undefined );
-      expect( cache.cache.keys().length ).to.equal( 1 );
+      expect( cache.cache.getKey( path.resolve( __dirname, '../fixtures/f2.txt' ) ) ).to.not.equal( undefined );
+      expect( cache.cache.keys().length ).to.equal( 4 );
 
     } );
 
-    it( 'should not remove visited entries from the cache if reconcile is called with noPrune=true', function () {
+    it( 'should not persist files that do not exist', function () {
       cache = fileEntryCache.create( 'testCache' );
 
       var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
       cache.normalizeEntries( files );
 
+      del( path.resolve( __dirname, '../fixtures/f2.txt' ), {
+        force: true
+      } );
+
       cache.reconcile();
 
       // the f2.txt file is in the cache
-      expect( cache.cache.getKey( path.resolve( __dirname, '../fixtures/f2.txt' ) ) ).to.not.equal( undefined );
+      expect( cache.cache.getKey( path.resolve( __dirname, '../fixtures/f2.txt' ) ) ).to.equal( undefined );
+
+      // now delete the entry
+      del( path.resolve( __dirname, '../fixtures/f3.txt' ), {
+        force: true
+      } );
 
       // load the cache again
       cache = fileEntryCache.create( 'testCache' );
 
-      // when recently loaded all entries are in the cache
-      expect( cache.cache.keys().length ).to.equal( 4 );
+      // when recently loaded all entries that exists are in the cache, f3 should not be there
+      expect( cache.cache.keys().length ).to.equal( 2 );
+
+      expect( cache.cache.getKey( path.resolve( __dirname, '../fixtures/f3.txt' ) ) ).to.equal( undefined );
 
       // we check only one file
       expect( cache.hasFileChanged( path.resolve( __dirname, '../fixtures/f4.txt' ) ) ).to.be.false;
 
-      cache.reconcile( true );
+      cache.reconcile();
 
-      // after reconcile we will only have 1 key because we just visited one entry
-      expect( cache.cache.getKey( path.resolve( __dirname, '../fixtures/f2.txt' ) ) ).to.not.equal( undefined );
-      expect( cache.cache.keys().length ).to.equal( 4 );
+      expect( cache.cache.keys().length ).to.equal( 2 );
 
     } );
 
