@@ -351,4 +351,49 @@ describe( 'file-entry-cache', function () {
 
     } );
   } );
+
+  describe( 'getFileDescriptor', function () {
+    it( 'should tell when file known to the cache is not found anymore ', function () {
+      var file = path.resolve( __dirname, '../fixtures/', fixtureFiles[ 0 ].name );
+      cache = fileEntryCache.createFromFile( '../fixtures/.eslintcache' );
+
+      cache.getFileDescriptor( file )
+      cache.reconcile();
+      del( file );
+      expect( cache.getFileDescriptor( file ).notFound ).to.be.true;
+    } );
+  } );
+
+  describe( 'analyzeFiles', function () {
+    it( 'should return correct information about files ', function () {
+      var filenames = fixtureFiles.map( function ( fixtureFile ) {
+        return path.resolve( __dirname, '../fixtures/', fixtureFile.name );
+      } );
+      var expectedBeforeChanges = {
+        changedFiles: filenames,
+        notFoundFiles: [],
+        notChangedFiles: []
+      };
+      var expectedAfterChanges = {
+        changedFiles: [
+          filenames[ 0 ]
+        ],
+        notFoundFiles: [
+          filenames[ 1 ]
+        ],
+        notChangedFiles: [
+          filenames[ 2 ],
+          filenames[ 3 ]
+        ]
+      };
+      cache = fileEntryCache.createFromFile( '../fixtures/.eslintcache' );
+
+      expect( cache.analyzeFiles( filenames ) ).to.deep.equal( expectedBeforeChanges );
+      cache.reconcile();
+
+      write( filenames[ 0 ], 'everybody can change' );
+      del( filenames[ 1 ] );
+      expect( cache.analyzeFiles( filenames ) ).to.deep.equal( expectedAfterChanges );
+    } );
+  } );
 } );
