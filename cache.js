@@ -1,4 +1,5 @@
 var path = require( 'path' );
+var ADLER32 = require( 'adler-32' );
 
 module.exports = {
   createFromFile: function ( filePath ) {
@@ -82,29 +83,27 @@ module.exports = {
       getFileDescriptor: function ( file ) {
         var meta = cache.getKey( file );
         var cacheExists = !!meta;
-        var fstat;
         var me = this;
+        var contentBuffer;
 
         try {
-          fstat = fs.statSync( file );
+          contentBuffer = fs.readFileSync( file );
         } catch (ex) {
           me.removeEntry( file );
           return { key: file, notFound: true, err: ex };
         }
 
-        var cSize = fstat.size;
-        var cTime = fstat.mtime.getTime();
+        var checksum = ADLER32.buf( contentBuffer );
 
         if ( !meta ) {
-          meta = { size: cSize, mtime: cTime };
+          meta = { checksum: checksum };
         } else {
-          var isDifferentDate = cTime !== meta.mtime;
-          var isDifferentSize = cSize !== meta.size;
+          var isDifferent = checksum !== meta.checksum;
         }
 
         var nEntry = normalizedEntries[ file ] = {
           key: file,
-          changed: !cacheExists || isDifferentDate || isDifferentSize,
+          changed: !cacheExists || isDifferent,
           meta: meta
         };
 
@@ -193,11 +192,9 @@ module.exports = {
           var cacheEntry = entries[ entryName ];
 
           try {
-            var stat = fs.statSync( cacheEntry.key );
-            var meta = assign( cacheEntry.meta, {
-              size: stat.size,
-              mtime: stat.mtime.getTime()
-            } );
+            var contentBuffer = fs.readFileSync( cacheEntry.key );
+            var checksum = ADLER32.buf( contentBuffer );
+            var meta = assign( cacheEntry.meta, { checksum: checksum } );
 
             cache.setKey( entryName, meta );
           } catch (err) {
