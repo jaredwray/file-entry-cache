@@ -1,0 +1,7 @@
+---
+plugins:
+  - import
+
+rules:
+  import/no-unresolved: [2, {commonjs: true, amd: true}]
+  no-console: 0
