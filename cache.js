@@ -1,5 +1,5 @@
 var path = require( 'path' );
-var ADLER32 = require( 'adler-32' );
+var crypto = require( 'crypto' );
 
 module.exports = {
   createFromFile: function ( filePath ) {
@@ -37,6 +37,20 @@ module.exports = {
        * @type {Object}
        */
       cache: cache,
+
+      /**
+       * Given a buffer, calculate md5 hash of its content.
+       * @method getHash
+       * @param  {Buffer} buffer   buffer to calculate hash on
+       * @return {String}          content hash digest
+       */
+      getHash: function ( buffer ) {
+        return crypto
+          .createHash( 'md5' )
+          .update( buffer )
+          .digest( 'hex' );
+      },
+
       /**
        * Return whether or not a file has changed since last time reconcile was called.
        * @method hasFileChanged
@@ -93,12 +107,12 @@ module.exports = {
           return { key: file, notFound: true, err: ex };
         }
 
-        var checksum = ADLER32.buf( contentBuffer );
+        var hash = this.getHash( contentBuffer );
 
         if ( !meta ) {
-          meta = { checksum: checksum };
+          meta = { hash: hash };
         } else {
-          var isDifferent = checksum !== meta.checksum;
+          var isDifferent = hash !== meta.hash;
         }
 
         var nEntry = normalizedEntries[ file ] = {
@@ -183,6 +197,7 @@ module.exports = {
 
         var entries = normalizedEntries;
         var keys = Object.keys( entries );
+        var me = this;
 
         if ( keys.length === 0 ) {
           return;
@@ -193,8 +208,8 @@ module.exports = {
 
           try {
             var contentBuffer = fs.readFileSync( cacheEntry.key );
-            var checksum = ADLER32.buf( contentBuffer );
-            var meta = assign( cacheEntry.meta, { checksum: checksum } );
+            var hash = me.getHash( contentBuffer );
+            var meta = assign( cacheEntry.meta, { hash: hash } );
 
             cache.setKey( entryName, meta );
           } catch (err) {
