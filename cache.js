@@ -107,12 +107,13 @@ module.exports = {
           return { key: file, notFound: true, err: ex };
         }
 
+        var isDifferent = true;
         var hash = this.getHash( contentBuffer );
 
         if ( !meta ) {
           meta = { hash: hash };
         } else {
-          var isDifferent = hash !== meta.hash;
+          isDifferent = hash !== meta.hash;
         }
 
         var nEntry = normalizedEntries[ file ] = {
