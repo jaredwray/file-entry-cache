@@ -99,22 +99,35 @@ module.exports = {
         var cacheExists = !!meta;
         var me = this;
         var contentBuffer;
+        var fstat;
+        var isDifferent = true;
 
         try {
-          contentBuffer = fs.readFileSync( file );
+          fstat = fs.statSync( file );
         } catch (ex) {
           me.removeEntry( file );
           return { key: file, notFound: true, err: ex };
         }
 
-        var isDifferent = true;
-        var hash = this.getHash( contentBuffer );
+        var cTime = fstat.mtime.getTime();
 
         if ( !meta ) {
-          meta = { hash: hash };
+          meta = { cTime: cTime };
         } else {
+          isDifferent = cTime !== meta.cTime;
+        }
+
+        if ( !isDifferent ) {
+          try {
+            contentBuffer = fs.readFileSync( file );
+          } catch (ex) {
+            me.removeEntry( file );
+            return { key: file, notFound: true, err: ex };
+          }
+          var hash = this.getHash( contentBuffer );
           isDifferent = hash !== meta.hash;
         }
+
 
         var nEntry = normalizedEntries[ file ] = {
           key: file,
@@ -208,9 +221,13 @@ module.exports = {
           var cacheEntry = entries[ entryName ];
 
           try {
+            var stat = fs.statSync( cacheEntry.key );
             var contentBuffer = fs.readFileSync( cacheEntry.key );
             var hash = me.getHash( contentBuffer );
-            var meta = assign( cacheEntry.meta, { hash: hash } );
+            var meta = assign( cacheEntry.meta, {
+              hash: hash,
+              cTime: stat.mtime.getTime()
+            } );
 
             cache.setKey( entryName, meta );
           } catch (err) {
