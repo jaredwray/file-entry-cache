@@ -16,9 +16,9 @@
     "node": ">=0.10.0"
   },
   "scripts": {
-    "beautify": "esbeautifier 'cache.js' 'test/**/*.js'",
+    "beautify": "esbeautifier 'cache.js' 'test/**/*.js' 'perf.js'",
     "beautify-check": "npm run beautify -- -k",
-    "eslint": "eslinter 'cache.js' 'specs/**/*.js'",
+    "eslint": "eslinter 'cache.js' 'specs/**/*.js' 'perf.js'",
     "lint": "npm run beautify && npm run eslint",
     "verify": "npm run beautify-check && npm run eslint",
     "install-hooks": "prepush install && changelogx install-hook && precommit install",
@@ -30,6 +30,7 @@
     "bump-minor": "npm run pre-v && npm version minor -m 'BLD: Release v%s' && npm run post-v",
     "bump-patch": "npm run pre-v && npm version patch -m 'BLD: Release v%s' && npm run post-v",
     "test": "npm run verify --silent && mocha -R spec test/specs",
+    "perf": "node perf.js",
     "cover": "istanbul cover test/runner.js html text-summary",
     "watch": "watch-run -i -p 'test/specs/**/*.js' istanbul cover test/runner.js html text-summary"
   },

@@ -1,4 +1,5 @@
 var path = require( 'path' );
+var crypto = require( 'crypto' );
 
 module.exports = {
   createFromFile: function ( filePath ) {
@@ -36,6 +37,20 @@ module.exports = {
        * @type {Object}
        */
       cache: cache,
+
+      /**
+       * Given a buffer, calculate md5 hash of its content.
+       * @method getHash
+       * @param  {Buffer} buffer   buffer to calculate hash on
+       * @return {String}          content hash digest
+       */
+      getHash: function ( buffer ) {
+        return crypto
+          .createHash( 'md5' )
+          .update( buffer )
+          .digest( 'hex' );
+      },
+
       /**
        * Return whether or not a file has changed since last time reconcile was called.
        * @method hasFileChanged
@@ -82,29 +97,28 @@ module.exports = {
       getFileDescriptor: function ( file ) {
         var meta = cache.getKey( file );
         var cacheExists = !!meta;
-        var fstat;
         var me = this;
+        var contentBuffer;
 
         try {
-          fstat = fs.statSync( file );
+          contentBuffer = fs.readFileSync( file );
         } catch (ex) {
           me.removeEntry( file );
           return { key: file, notFound: true, err: ex };
         }
 
-        var cSize = fstat.size;
-        var cTime = fstat.mtime.getTime();
+        var isDifferent = true;
+        var hash = this.getHash( contentBuffer );
 
         if ( !meta ) {
-          meta = { size: cSize, mtime: cTime };
+          meta = { hash: hash };
         } else {
-          var isDifferentDate = cTime !== meta.mtime;
-          var isDifferentSize = cSize !== meta.size;
+          isDifferent = hash !== meta.hash;
         }
 
         var nEntry = normalizedEntries[ file ] = {
           key: file,
-          changed: !cacheExists || isDifferentDate || isDifferentSize,
+          changed: !cacheExists || isDifferent,
           meta: meta
         };
 
@@ -184,6 +198,7 @@ module.exports = {
 
         var entries = normalizedEntries;
         var keys = Object.keys( entries );
+        var me = this;
 
         if ( keys.length === 0 ) {
           return;
@@ -193,11 +208,9 @@ module.exports = {
           var cacheEntry = entries[ entryName ];
 
           try {
-            var stat = fs.statSync( cacheEntry.key );
-            var meta = assign( cacheEntry.meta, {
-              size: stat.size,
-              mtime: stat.mtime.getTime()
-            } );
+            var contentBuffer = fs.readFileSync( cacheEntry.key );
+            var hash = me.getHash( contentBuffer );
+            var meta = assign( cacheEntry.meta, { hash: hash } );
 
             cache.setKey( entryName, meta );
           } catch (err) {
