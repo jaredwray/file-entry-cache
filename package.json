@@ -80,6 +80,6 @@
   },
   "dependencies": {
     "flat-cache": "^1.2.1",
-    "object-assign": "^4.0.1"
+    "object-assign": "^4.1.1"
   }
 }
