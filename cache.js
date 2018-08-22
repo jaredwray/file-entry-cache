@@ -192,8 +192,9 @@ module.exports = {
       /**
        * Sync the files and persist them to the cache
        * @method reconcile
+       * @param persist
        */
-      reconcile: function () {
+      reconcile: function ( persist ) {
         removeNotFoundFiles();
 
         var entries = normalizedEntries;
@@ -222,7 +223,9 @@ module.exports = {
           }
         } );
 
-        cache.save( true );
+        if ( persist !== false ) {
+          cache.save( true );
+        }
       }
     };
   }

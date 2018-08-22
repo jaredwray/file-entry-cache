@@ -115,6 +115,30 @@ describe( 'file-entry-cache', function () {
     expect( fs.existsSync( '../fixtures/.eslintcache' ) ).to.be.false;
   } );
 
+  it( 'should allow to reconcile the cache without persisting to a file', function () {
+    cache = fileEntryCache.createFromFile( '../fixtures/.eslintcache' );
+    var fs = require( 'fs' );
+    var file = path.resolve( __dirname, '../fixtures/f4.txt' );
+    var files = expand( path.resolve( __dirname, '../fixtures/*.txt' ) );
+    var oFiles = cache.getUpdatedFiles( files );
+
+    cache.reconcile( false );
+
+    expect( fs.existsSync( '../fixtures/.eslintcache' ) ).to.be.false;
+
+    expect( cache.hasFileChanged( file ) ).to.be.false;
+
+    // attempt to do a modification
+    write( file, 'some other content' );
+
+    expect( cache.hasFileChanged( file ) ).to.be.true;
+
+    cache.reconcile( false );
+
+    expect( cache.hasFileChanged( file ) ).to.be.false;
+    expect( fs.existsSync( '../fixtures/.eslintcache' ) ).to.be.false;
+  } );
+
   it( 'should return the array of files passed the first time since there was no cache created', function () {
 
     cache = fileEntryCache.create( 'testCache' );
