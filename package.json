@@ -13,7 +13,7 @@
     "cache.js"
   ],
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=4"
   },
   "scripts": {
     "beautify": "esbeautifier 'cache.js' 'test/**/*.js' 'perf.js'",
@@ -79,7 +79,6 @@
     "write": "^0.3.1"
   },
   "dependencies": {
-    "flat-cache": "2.0.1",
-    "object-assign": "^4.0.1"
+    "flat-cache": "^2.0.1"
   }
 }
