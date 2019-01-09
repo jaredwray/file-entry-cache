@@ -1,5 +1,16 @@
 
 # file-entry-cache - Changelog
+## v4.0.0
+- **Build Scripts Changes**
+  - use the same node versions eslint use - [563cfee]( https://github.com/royriojas/file-entry-cache/commit/563cfee ), [Roy Riojas](https://github.com/Roy Riojas), 08/01/2019 23:29:34
+
+    
+- **Other changes**
+  - Remove object-assign dependency. - [d0f598e]( https://github.com/royriojas/file-entry-cache/commit/d0f598e ), [Corey Farrell](https://github.com/Corey Farrell), 08/01/2019 23:09:51
+
+    node.js >=4 is required so object-assign is no longer needed, the native
+    Object.assign can be used instead.
+    
 ## v3.0.0
 - **Build Scripts Changes**
   - Upgrade flat-cache dep to latest - [078b0df]( https://github.com/royriojas/file-entry-cache/commit/078b0df ), [Roy Riojas](https://github.com/Roy Riojas), 08/01/2019 21:54:40
