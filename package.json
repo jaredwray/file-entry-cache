@@ -62,7 +62,7 @@
   },
   "devDependencies": {
     "chai": "^3.2.0",
-    "changelogx": "^1.0.18",
+    "changelogx": "3.0.0",
     "commander": "^2.6.0",
     "del": "^2.0.2",
     "esbeautifier": "^4.2.11",
@@ -79,7 +79,7 @@
     "write": "^0.3.1"
   },
   "dependencies": {
-    "flat-cache": "^1.2.1",
+    "flat-cache": "2.0.1",
     "object-assign": "^4.0.1"
   }
 }
