@@ -12,7 +12,6 @@ module.exports = {
     var fs = require( 'fs' );
     var flatCache = require( 'flat-cache' );
     var cache = flatCache.load( cacheId, _path );
-    var assign = require( 'object-assign' );
     var normalizedEntries = { };
 
     var removeNotFoundFiles = function removeNotFoundFiles() {
@@ -224,6 +223,7 @@ module.exports = {
             var stat = fs.statSync( cacheEntry.key );
             var contentBuffer = fs.readFileSync( cacheEntry.key );
             var hash = me.getHash( contentBuffer );
+
             var meta = assign( cacheEntry.meta, {
               hash: hash,
               cTime: stat.mtime.getTime()
