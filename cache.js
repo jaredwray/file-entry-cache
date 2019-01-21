@@ -224,7 +224,7 @@ module.exports = {
             var contentBuffer = fs.readFileSync( cacheEntry.key );
             var hash = me.getHash( contentBuffer );
 
-            var meta = assign( cacheEntry.meta, {
+            var meta = Object.assign( cacheEntry.meta, {
               hash: hash,
               cTime: stat.mtime.getTime()
             } );
