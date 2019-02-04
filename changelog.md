@@ -1,5 +1,11 @@
 
 # file-entry-cache - Changelog
+## v5.0.1
+- **Bug Fixes**
+  - Fix missing checksum comparison from reconcile since now we use mtime and size by default. - [e858aa9]( https://github.com/royriojas/file-entry-cache/commit/e858aa9 ), [Roy Riojas](https://github.com/Roy Riojas), 04/02/2019 12:30:22
+
+    Old mode using checkSum can still be used by passing the `useCheckSum` parameter to the `create` or `createFromFile` methods.
+    
 ## v5.0.0
 - **Refactoring**
   - Make checksum comparison optional - [b0f9ae0]( https://github.com/royriojas/file-entry-cache/commit/b0f9ae0 ), [Roy Riojas](https://github.com/Roy Riojas), 03/02/2019 21:17:39
