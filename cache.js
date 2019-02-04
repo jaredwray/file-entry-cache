@@ -2,13 +2,13 @@ var path = require( 'path' );
 var crypto = require( 'crypto' );
 
 module.exports = {
-  createFromFile: function ( filePath ) {
+  createFromFile: function ( filePath, useChecksum ) {
     var fname = path.basename( filePath );
     var dir = path.dirname( filePath );
-    return this.create( fname, dir );
+    return this.create( fname, dir, useChecksum );
   },
 
-  create: function ( cacheId, _path ) {
+  create: function ( cacheId, _path, useChecksum ) {
     var fs = require( 'fs' );
     var flatCache = require( 'flat-cache' );
     var cache = flatCache.load( cacheId, _path );
@@ -94,16 +94,57 @@ module.exports = {
       },
 
       getFileDescriptor: function ( file ) {
+        var fstat;
+
+        try {
+          fstat = fs.statSync( file );
+        } catch (ex) {
+          this.removeEntry( file );
+          return { key: file, notFound: true, err: ex };
+        }
+
+        if ( useChecksum ) {
+          return this._getFileDescriptorUsingChecksum( file );
+        }
+
+        return this._getFileDescriptorUsingMtimeAndSize( file, fstat );
+      },
+
+      _getFileDescriptorUsingMtimeAndSize: function ( file, fstat ) {
         var meta = cache.getKey( file );
         var cacheExists = !!meta;
-        var me = this;
-        var contentBuffer;
 
+        var cSize = fstat.size;
+        var cTime = fstat.mtime.getTime();
+
+        var isDifferentDate;
+        var isDifferentSize;
+
+        if ( !meta ) {
+          meta = { size: cSize, mtime: cTime };
+        } else {
+          isDifferentDate = cTime !== meta.mtime;
+          isDifferentSize = cSize !== meta.size;
+        }
+
+        var nEntry = normalizedEntries[ file ] = {
+          key: file,
+          changed: !cacheExists || isDifferentDate || isDifferentSize,
+          meta: meta
+        };
+
+        return nEntry;
+      },
+
+      _getFileDescriptorUsingChecksum: function ( file ) {
+        var meta = cache.getKey( file );
+        var cacheExists = !!meta;
+
+        var contentBuffer;
         try {
           contentBuffer = fs.readFileSync( file );
         } catch (ex) {
-          me.removeEntry( file );
-          return { key: file, notFound: true, err: ex };
+          contentBuffer = '';
         }
 
         var isDifferent = true;
@@ -192,8 +233,10 @@ module.exports = {
        * Sync the files and persist them to the cache
        * @method reconcile
        */
-      reconcile: function () {
+      reconcile: function ( noPrune ) {
         removeNotFoundFiles();
+
+        noPrune = typeof noPrune === 'undefined' ? true : noPrune;
 
         var entries = normalizedEntries;
         var keys = Object.keys( entries );
@@ -221,7 +264,7 @@ module.exports = {
           }
         } );
 
-        cache.save( true );
+        cache.save( noPrune );
       }
     };
   }

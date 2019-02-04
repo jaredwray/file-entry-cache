@@ -57,7 +57,7 @@ describe( 'file-entry-cache', function () {
 
   describe( 'hasFileChanged', function () {
     it( 'should determine if a file has changed since last time reconcile was called', function () {
-      cache = fileEntryCache.createFromFile( '../fixtures/.eslintcache' );
+      cache = fileEntryCache.createFromFile( '../fixtures/.eslintcache', true );
 
       var file = path.resolve( __dirname, '../fixtures/f4.txt' );
 
@@ -86,7 +86,7 @@ describe( 'file-entry-cache', function () {
 
     it( 'should consider file unchanged even with different mtime', function () {
       var file = path.resolve( __dirname, '../fixtures/f4.txt' );
-      cache = fileEntryCache.createFromFile( '../fixtures/.eslintcache' );
+      cache = fileEntryCache.createFromFile( '../fixtures/.eslintcache', true );
 
       cache.hasFileChanged( file );
       cache.reconcile();
