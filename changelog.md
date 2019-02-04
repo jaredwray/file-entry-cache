@@ -1,5 +1,19 @@
 
 # file-entry-cache - Changelog
+## v5.0.0
+- **Refactoring**
+  - Make checksum comparison optional - [b0f9ae0]( https://github.com/royriojas/file-entry-cache/commit/b0f9ae0 ), [Roy Riojas](https://github.com/Roy Riojas), 03/02/2019 21:17:39
+
+    To determine if a file has changed we were using the checksum in the newer versions, but eslint was relying on the old behavior where we use the mtime and file size to determine if a file changed. That's why we decided to make the checksum check optional.
+    
+    To use it:
+    
+    ```js
+    // to make the cache use the checkSum check do the following:
+    var fCache = fileEntryCache.create(cacheName, dir, useCheckSum); // pass the third parameter as true
+    var otherCache = fileEntryCache.createFromFile(cacheName, useCheckSum); // pass the second parameter as true
+    ```
+    
 ## v4.0.0
 - **Build Scripts Changes**
   - use the same node versions eslint use - [563cfee]( https://github.com/royriojas/file-entry-cache/commit/563cfee ), [Roy Riojas](https://github.com/Roy Riojas), 08/01/2019 23:29:34
