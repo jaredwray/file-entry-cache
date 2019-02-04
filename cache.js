@@ -229,6 +229,23 @@ module.exports = {
         normalizedEntries = { };
         cache.destroy();
       },
+
+      _getMetaForFileUsingCheckSum: function ( cacheEntry ) {
+        var contentBuffer = fs.readFileSync( cacheEntry.key );
+        var hash = this.getHash( contentBuffer );
+        var meta = Object.assign( cacheEntry.meta, { hash: hash } );
+        return meta;
+      },
+
+      _getMetaForFileUsingMtimeAndSize: function ( cacheEntry ) {
+        var stat = fs.statSync( cacheEntry.key );
+        var meta = Object.assign( cacheEntry.meta, {
+          size: stat.size,
+          mtime: stat.mtime.getTime()
+        } );
+        return meta;
+      },
+
       /**
        * Sync the files and persist them to the cache
        * @method reconcile
@@ -240,20 +257,18 @@ module.exports = {
 
         var entries = normalizedEntries;
         var keys = Object.keys( entries );
-        var me = this;
 
         if ( keys.length === 0 ) {
           return;
         }
 
+        var me = this;
+
         keys.forEach( function ( entryName ) {
           var cacheEntry = entries[ entryName ];
 
           try {
-            var contentBuffer = fs.readFileSync( cacheEntry.key );
-            var hash = me.getHash( contentBuffer );
-            var meta = Object.assign( cacheEntry.meta, { hash: hash } );
-
+            var meta = useChecksum ? me._getMetaForFileUsingCheckSum( cacheEntry ) : me._getMetaForFileUsingMtimeAndSize( cacheEntry );
             cache.setKey( entryName, meta );
           } catch (err) {
             // if the file does not exists we don't save it
