@@ -1,14 +1,18 @@
 var path = require( 'path' );
 var crypto = require( 'crypto' );
 
+var defaultUseChecksum = !!process.env.FILE_ENTRY_CACHE_USE_CHECKSUM;
+
 module.exports = {
   createFromFile: function ( filePath, useChecksum ) {
+    if (defaultUseChecksum) useChecksum = true;
     var fname = path.basename( filePath );
     var dir = path.dirname( filePath );
     return this.create( fname, dir, useChecksum );
   },
 
   create: function ( cacheId, _path, useChecksum ) {
+    if (defaultUseChecksum) useChecksum = true;
     var fs = require( 'fs' );
     var flatCache = require( 'flat-cache' );
     var cache = flatCache.load( cacheId, _path );
