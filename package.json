@@ -63,7 +63,6 @@
   "devDependencies": {
     "chai": "^3.2.0",
     "changelogx": "3.0.0",
-    "commander": "^2.6.0",
     "del": "^2.0.2",
     "esbeautifier": "^4.2.11",
     "eslinter": "^2.3.3",
@@ -79,6 +78,6 @@
     "write": "^0.3.1"
   },
   "dependencies": {
-    "flat-cache": "^2.0.1"
+    "flat-cache": "^3.0.0"
   }
 }
