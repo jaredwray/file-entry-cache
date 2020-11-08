@@ -16,7 +16,7 @@
     "node": ">=4"
   },
   "scripts": {
-    "eslint": "eslint --cache --cache-location=nod_modules/.cache/ 'cache.js' 'test/**/*.js' 'perf.js'",
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/ 'cache.js' 'test/**/*.js' 'perf.js'",
     "autofix": "npm run eslint -- --fix",
     "install-hooks": "prepush install && changelogx install-hook && precommit install",
     "changelog": "changelogx -f markdown -o ./changelog.md",
@@ -75,6 +75,6 @@
     "write": "^2.0.0"
   },
   "dependencies": {
-    "flat-cache": "^3.0.2"
+    "flat-cache": "^3.0.4"
   }
 }
