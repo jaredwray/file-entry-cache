@@ -3,7 +3,7 @@
 > and that only need to repeat the job on the changed ones since the previous run of the process — Edit
 
 [![NPM Version](http://img.shields.io/npm/v/file-entry-cache.svg?style=flat)](https://npmjs.org/package/file-entry-cache)
-[![Build Status](http://img.shields.io/travis/royriojas/file-entry-cache.svg?style=flat)](https://travis-ci.org/royriojas/file-entry-cache)
+
 
 ## install
 
