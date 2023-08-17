@@ -1,5 +1,5 @@
 # file-entry-cache
-> Super simple cache for file metadata, useful for process that work o a given series of files
+> Super simple cache for file metadata, useful for process that work on a given series of files
 > and that only need to repeat the job on the changed ones since the previous run of the process — Edit
 
 [![NPM Version](http://img.shields.io/npm/v/file-entry-cache.svg?style=flat)](https://npmjs.org/package/file-entry-cache)
