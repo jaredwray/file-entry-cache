@@ -58,7 +58,7 @@
     "projectName": "file-entry-cache"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
+    "chai": "^4.3.7",
     "changelogx": "^5.0.6",
     "del": "^6.0.0",
     "eslint": "^7.13.0",
@@ -67,7 +67,7 @@
     "eslint-plugin-prettier": "^3.1.4",
     "glob-expand": "^0.2.1",
     "istanbul": "^0.4.5",
-    "mocha": "^8.2.1",
+    "mocha": "^10.2.0",
     "precommit": "^1.2.2",
     "prepush": "^3.1.11",
     "prettier": "^2.1.2",
