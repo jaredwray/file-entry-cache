@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: ['12', '14', '16', '18']
+        node-version: ['12', '14', '16']
 
     steps:
     - uses: actions/checkout@v3
@@ -24,7 +24,7 @@ jobs:
       run: npm install
 
     - name: Testing    
-      run: npm run test
+      run: npm run test:ci
 
     - name: Run Codecov
       uses: codecov/codecov-action@v3

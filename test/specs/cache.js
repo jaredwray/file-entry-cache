@@ -375,7 +375,41 @@ describe('file-entry-cache', function () {
 
       write(filenames[0], 'everybody can change');
       del(filenames[1]);
+
       expect(cache.analyzeFiles(filenames)).to.deep.equal(expectedAfterChanges);
+    });
+  });
+
+  describe('handling no valid buffer on cache', function () {
+    it('should error when not valid and set buffer to nothing', function () {
+      var newCache = require('../../cache.js').create('testCache1');
+      var result = newCache._getFileDescriptorUsingChecksum('foo');
+      expect(result.key).to.equal('foo');
+    });
+  });
+
+  describe('throwing on reconcile', function () {
+    it('should throw on reconcile when not ENOENT', function () {
+      var newCache = fileEntryCache.create('cache-1');
+
+      var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+      newCache.normalizeEntries(files);
+
+      newCache._getMetaForFileUsingMtimeAndSize = function () {
+        var error = new Error('BAM');
+        error.code = 'BAM';
+        throw error;
+      };
+
+      var error;
+
+      try {
+        newCache.reconcile();
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).to.not.equal(undefined);
     });
   });
 });
