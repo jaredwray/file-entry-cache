@@ -4,7 +4,7 @@
 
 [![NPM Version](http://img.shields.io/npm/v/file-entry-cache.svg?style=flat)](https://npmjs.org/package/file-entry-cache)
 [![tests](https://github.com/jaredwray/file-entry-cache/actions/workflows/tests.yaml/badge.svg?branch=master)](https://github.com/jaredwray/file-entry-cache/actions/workflows/tests.yaml)
-
+[![codecov](https://codecov.io/github/jaredwray/file-entry-cache/graph/badge.svg?token=37tZMQE0Sy)](https://codecov.io/github/jaredwray/file-entry-cache)
 [![npm](https://img.shields.io/npm/dm/file-entry-cache)](https://npmjs.com/package/file-entry-cache)
 
 
