@@ -380,7 +380,7 @@ describe('file-entry-cache', function () {
     });
   });
 
-  describe('getFileDescriptorUsingChecksum', function () {
+  describe('handling no valid buffer on cache', function () {
     it('should error when not valid and set buffer to nothing', function () {
       var newCache = require('../../cache.js').create('testCache1');
       var result = newCache._getFileDescriptorUsingChecksum('foo');
