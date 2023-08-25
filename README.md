@@ -3,7 +3,10 @@
 > and that only need to repeat the job on the changed ones since the previous run of the process — Edit
 
 [![NPM Version](http://img.shields.io/npm/v/file-entry-cache.svg?style=flat)](https://npmjs.org/package/file-entry-cache)
-[![tests](https://github.com/jaredwray/file-entry-cache/actions/workflows/tests.yaml/badge.svg)](https://github.com/jaredwray/file-entry-cache/actions/workflows/tests.yaml)
+[![tests](https://github.com/jaredwray/file-entry-cache/actions/workflows/tests.yaml/badge.svg?branch=master)](https://github.com/jaredwray/file-entry-cache/actions/workflows/tests.yaml)
+
+[![npm](https://img.shields.io/npm/dm/file-entry-cache)](https://npmjs.com/package/file-entry-cache)
+
 
 ## install
 
