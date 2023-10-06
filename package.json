@@ -50,6 +50,6 @@
     "write": "^2.0.0"
   },
   "dependencies": {
-    "flat-cache": "^3.1.0"
+    "flat-cache": "^3.1.1"
   }
 }
