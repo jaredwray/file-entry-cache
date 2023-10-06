@@ -30,3 +30,4 @@ node_modules
 # Optional npm cache directory
 package-lock.json
 
+yarn.lock
