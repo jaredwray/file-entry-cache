@@ -39,13 +39,13 @@
   "devDependencies": {
     "c8": "^8.0.1",
     "chai": "^4.3.10",
-    "eslint": "^8.50.0",
+    "eslint": "^8.53.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-mocha": "^10.2.0",
-    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-prettier": "^5.0.1",
     "glob-expand": "^0.2.1",
     "mocha": "^10.2.0",
-    "prettier": "^2.1.2",
+    "prettier": "^3.1.0",
     "write": "^2.0.0"
   },
   "dependencies": {
