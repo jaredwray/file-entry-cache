@@ -1,6 +1,7 @@
 var expect = require('chai').expect;
 var path = require('path');
 var write = require('write').sync;
+var fs = require('fs');
 var fileEntryCache = require('../../cache');
 
 function expand() {
@@ -11,8 +12,27 @@ function expand() {
     });
 }
 
+function deleteFileSync(filePath) {
+  if (fs.existsSync(filePath)) {
+    const stats = fs.statSync(filePath);
+
+    if (stats.isDirectory()) {
+      // Recursively delete directory contents
+      fs.readdirSync(filePath).forEach(file => {
+        const curPath = path.join(filePath, file);
+        deleteFileSync(curPath);
+      });
+
+      // Delete the directory itself
+      fs.rmdirSync(filePath);
+    } else {
+      // Delete file
+      fs.unlinkSync(filePath);
+    }
+  }
+}
+
 var fixturesDir = path.resolve(__dirname, '../fixtures');
-var del = require('del').sync;
 
 var fixtureFiles = [
   {
@@ -36,7 +56,7 @@ var fixtureFiles = [
 var cache;
 
 var delCacheAndFiles = function () {
-  del(fixturesDir, { force: true });
+  deleteFileSync(fixturesDir);
   cache && cache.deleteCacheFile();
 };
 
@@ -250,9 +270,7 @@ describe('file-entry-cache', function () {
       var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
       cache.normalizeEntries(files);
 
-      del(path.resolve(__dirname, '../fixtures/f2.txt'), {
-        force: true,
-      });
+      deleteFileSync(path.resolve(__dirname, '../fixtures/f2.txt'));
 
       cache.reconcile();
 
@@ -260,9 +278,7 @@ describe('file-entry-cache', function () {
       expect(cache.cache.getKey(path.resolve(__dirname, '../fixtures/f2.txt'))).to.equal(undefined);
 
       // now delete the entry
-      del(path.resolve(__dirname, '../fixtures/f3.txt'), {
-        force: true,
-      });
+      deleteFileSync(path.resolve(__dirname, '../fixtures/f3.txt'));
 
       // load the cache again
       cache = fileEntryCache.create('testCache');
@@ -348,7 +364,7 @@ describe('file-entry-cache', function () {
 
       cache.getFileDescriptor(file);
       cache.reconcile();
-      del(file);
+      deleteFileSync(file);
       expect(cache.getFileDescriptor(file).notFound).to.be.true;
     });
   });
@@ -374,7 +390,7 @@ describe('file-entry-cache', function () {
       cache.reconcile();
 
       write(filenames[0], 'everybody can change');
-      del(filenames[1]);
+      deleteFileSync(filenames[1]);
 
       expect(cache.analyzeFiles(filenames)).to.deep.equal(expectedAfterChanges);
     });
