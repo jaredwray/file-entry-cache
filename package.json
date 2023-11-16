@@ -39,7 +39,6 @@
   "devDependencies": {
     "c8": "^8.0.1",
     "chai": "^4.3.10",
-    "del": "^6.0.0",
     "eslint": "^8.50.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-mocha": "^10.2.0",
