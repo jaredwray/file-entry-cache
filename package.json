@@ -18,6 +18,7 @@
   "scripts": {
     "eslint": "eslint --cache --cache-location=node_modules/.cache/ 'cache.js' 'test/**/*.js' 'perf.js'",
     "autofix": "npm run eslint -- --fix",
+    "clean": "rimraf ./node_modules ./package-lock.json ./yarn.lock",
     "test": "npm run eslint --silent && c8 mocha -R spec test/specs",
     "test:ci": "npm run eslint --silent && c8 --reporter=lcov mocha -R spec test/specs",
     "perf": "node perf.js"
@@ -46,6 +47,7 @@
     "glob-expand": "^0.2.1",
     "mocha": "^10.2.0",
     "prettier": "^2.1.2",
+    "rimraf": "^5.0.5",
     "write": "^2.0.0"
   },
   "dependencies": {
