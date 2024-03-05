@@ -1,4 +1,5 @@
 var path = require('path');
+var process = require('process');
 var crypto = require('crypto');
 
 module.exports = {
@@ -94,6 +95,10 @@ module.exports = {
         var fstat;
 
         try {
+          if (!path.isAbsolute(file)) {
+            file = path.resolve(process.cwd(), file);
+          }
+
           fstat = fs.statSync(file);
         } catch (ex) {
           this.removeEntry(file);
@@ -210,6 +215,10 @@ module.exports = {
        * @param entryName
        */
       removeEntry: function (entryName) {
+        if (!path.isAbsolute(entryName)) {
+          entryName = path.resolve(process.cwd(), entryName);
+        }
+
         delete normalizedEntries[entryName];
         cache.removeKey(entryName);
       },

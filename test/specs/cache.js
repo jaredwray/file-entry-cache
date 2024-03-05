@@ -142,6 +142,12 @@ describe('file-entry-cache', function () {
     var oFiles = cache.getUpdatedFiles(files);
 
     expect(oFiles).to.deep.equal(files);
+
+    cache.reconcile();
+
+    oFiles = cache.getUpdatedFiles(files);
+
+    expect(oFiles).to.deep.equal([]);
   });
 
   it('should return none, if no files were modified', function () {
@@ -426,6 +432,25 @@ describe('file-entry-cache', function () {
       }
 
       expect(error).to.not.equal(undefined);
+    });
+  });
+
+  describe('handling relative paths', function () {
+    it('getFileDescriptor with relative paths', function () {
+      var absoluteFile = path.resolve(__dirname, '../fixtures/', fixtureFiles[0].name);
+      var relativeFile = path.relative(process.cwd(), absoluteFile); // test/fixtures/f1.txt
+      cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
+      expect(cache.getFileDescriptor(absoluteFile).changed).to.be.true;
+      expect(cache.getFileDescriptor(relativeFile).changed).to.be.true;
+    });
+
+    it('removeEntry with relative paths', function () {
+      var absoluteFile = path.resolve(__dirname, '../fixtures/', fixtureFiles[0].name);
+      var relativeFile = path.relative(process.cwd(), absoluteFile); // test/fixtures/f1.txt
+      cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
+      cache.removeEntry(relativeFile);
+      cache.reconcile();
+      expect(cache.hasFileChanged(relativeFile)).to.be.true;
     });
   });
 });
