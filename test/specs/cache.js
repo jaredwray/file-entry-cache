@@ -1,456 +1,449 @@
-var expect = require('chai').expect;
-var path = require('path');
-var write = require('write').sync;
-var fs = require('fs');
-var fileEntryCache = require('../../cache');
+/* eslint-disable import/order, prefer-rest-params,no-unused-expressions, no-undef  */
+const path = require('node:path');
+const {expect} = require('chai');
+const write = require('write').sync;
+const fs = require('node:fs');
+const fileEntryCache = require('../../cache.js');
 
 function expand() {
-  return require('glob-expand')
-    .apply(null, arguments)
-    .map(function (file) {
-      return file.split('/').join(path.sep);
-    });
+	return Reflect.apply(require('glob-expand'), null, arguments)
+		.map(file => file.split('/').join(path.sep));
 }
 
 function deleteFileSync(filePath) {
-  if (fs.existsSync(filePath)) {
-    const stats = fs.statSync(filePath);
+	if (fs.existsSync(filePath)) {
+		const stats = fs.statSync(filePath);
 
-    if (stats.isDirectory()) {
-      // Recursively delete directory contents
-      fs.readdirSync(filePath).forEach(file => {
-        const curPath = path.join(filePath, file);
-        deleteFileSync(curPath);
-      });
+		if (stats.isDirectory()) {
+			// Recursively delete directory contents
+			for (const file of fs.readdirSync(filePath)) {
+				const currentPath = path.join(filePath, file);
+				deleteFileSync(currentPath);
+			}
 
-      // Delete the directory itself
-      fs.rmdirSync(filePath);
-    } else {
-      // Delete file
-      fs.unlinkSync(filePath);
-    }
-  }
+			// Delete the directory itself
+			fs.rmdirSync(filePath);
+		} else {
+			// Delete file
+			fs.unlinkSync(filePath);
+		}
+	}
 }
 
-var fixturesDir = path.resolve(__dirname, '../fixtures');
+const fixturesDir = path.resolve(__dirname, '../fixtures');
 
-var fixtureFiles = [
-  {
-    name: 'f1.txt',
-    content: 'some content 1',
-  },
-  {
-    name: 'f2.txt',
-    content: 'some content 2',
-  },
-  {
-    name: 'f3.txt',
-    content: 'some content 3',
-  },
-  {
-    name: 'f4.txt',
-    content: 'some content 4',
-  },
+const fixtureFiles = [
+	{
+		name: 'f1.txt',
+		content: 'some content 1',
+	},
+	{
+		name: 'f2.txt',
+		content: 'some content 2',
+	},
+	{
+		name: 'f3.txt',
+		content: 'some content 3',
+	},
+	{
+		name: 'f4.txt',
+		content: 'some content 4',
+	},
 ];
 
-var cache;
+let cache;
 
-var delCacheAndFiles = function () {
-  deleteFileSync(fixturesDir);
-  cache && cache.deleteCacheFile();
+const delCacheAndFiles = function () {
+	deleteFileSync(fixturesDir);
+	cache && cache.deleteCacheFile();
 };
 
-var createFixtureFiles = function () {
-  fixtureFiles.forEach(function (f) {
-    write(path.resolve(fixturesDir, f.name), f.content);
-  });
+const createFixtureFiles = function () {
+	for (const f of fixtureFiles) {
+		write(path.resolve(fixturesDir, f.name), f.content);
+	}
 };
 
-describe('file-entry-cache', function () {
-  beforeEach(function () {
-    delCacheAndFiles();
-    createFixtureFiles();
-  });
+describe('file-entry-cache', () => {
+	beforeEach(() => {
+		delCacheAndFiles();
+		createFixtureFiles();
+	});
 
-  afterEach(function () {
-    delCacheAndFiles();
-  });
+	afterEach(() => {
+		delCacheAndFiles();
+	});
 
-  describe('hasFileChanged', function () {
-    it('should determine if a file has changed since last time reconcile was called', function () {
-      cache = fileEntryCache.createFromFile('../fixtures/.eslintcache', true);
+	describe('hasFileChanged', () => {
+		it('should determine if a file has changed since last time reconcile was called', () => {
+			cache = fileEntryCache.createFromFile('../fixtures/.eslintcache', true);
 
-      var file = path.resolve(__dirname, '../fixtures/f4.txt');
+			const file = path.resolve(__dirname, '../fixtures/f4.txt');
 
-      // not called yet reconcile so all the files passed will be returned as changed
-      // provided that the file actually exists
-      expect(cache.hasFileChanged(file)).to.be.true;
+			// Not called yet reconcile so all the files passed will be returned as changed
+			// provided that the file actually exists
+			expect(cache.hasFileChanged(file)).to.be.true;
 
-      // since reconcile has not being called this should be true
-      expect(cache.hasFileChanged(file)).to.be.true;
+			// Since reconcile has not being called this should be true
+			expect(cache.hasFileChanged(file)).to.be.true;
 
-      cache.reconcile();
+			cache.reconcile();
 
-      // since reconcile was called then this should be false
-      expect(cache.hasFileChanged(file)).to.be.false;
+			// Since reconcile was called then this should be false
+			expect(cache.hasFileChanged(file)).to.be.false;
 
-      // attempt to do a modification
-      write(file, 'some other content');
+			// Attempt to do a modification
+			write(file, 'some other content');
 
-      expect(cache.hasFileChanged(file)).to.be.true;
+			expect(cache.hasFileChanged(file)).to.be.true;
 
-      cache.reconcile();
+			cache.reconcile();
 
-      expect(cache.hasFileChanged(file)).to.be.false;
-    });
+			expect(cache.hasFileChanged(file)).to.be.false;
+		});
 
-    it('should consider file unchanged even with different mtime', function () {
-      var file = path.resolve(__dirname, '../fixtures/f4.txt');
-      cache = fileEntryCache.createFromFile('../fixtures/.eslintcache', true);
+		it('should consider file unchanged even with different mtime', () => {
+			const file = path.resolve(__dirname, '../fixtures/f4.txt');
+			cache = fileEntryCache.createFromFile('../fixtures/.eslintcache', true);
 
-      cache.hasFileChanged(file);
-      cache.reconcile();
-      delCacheAndFiles();
-      createFixtureFiles();
-      expect(cache.hasFileChanged(file)).to.be.false;
-    });
-  });
+			cache.hasFileChanged(file);
+			cache.reconcile();
+			delCacheAndFiles();
+			createFixtureFiles();
+			expect(cache.hasFileChanged(file)).to.be.false;
+		});
+	});
 
-  it('should create a file entry cache using a file path', function () {
-    cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
-    var fs = require('fs');
-    var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-    var oFiles = cache.getUpdatedFiles(files);
+	it('should create a file entry cache using a file path', () => {
+		cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
+		const fs = require('node:fs');
+		const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+		const oFiles = cache.getUpdatedFiles(files);
 
-    expect(oFiles).to.deep.equal(files);
+		expect(oFiles).to.deep.equal(files);
 
-    expect(fs.existsSync('../fixtures/.eslintcache')).to.be.false;
+		expect(fs.existsSync('../fixtures/.eslintcache')).to.be.false;
 
-    cache.reconcile();
+		cache.reconcile();
 
-    expect(fs.existsSync('../fixtures/.eslintcache')).to.be.true;
+		expect(fs.existsSync('../fixtures/.eslintcache')).to.be.true;
 
-    cache.destroy();
+		cache.destroy();
 
-    expect(fs.existsSync('../fixtures/.eslintcache')).to.be.false;
-  });
+		expect(fs.existsSync('../fixtures/.eslintcache')).to.be.false;
+	});
 
-  it('should return the array of files passed the first time since there was no cache created', function () {
-    cache = fileEntryCache.create('testCache');
+	it('should return the array of files passed the first time since there was no cache created', () => {
+		cache = fileEntryCache.create('testCache');
 
-    var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-    var oFiles = cache.getUpdatedFiles(files);
+		const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+		let oFiles = cache.getUpdatedFiles(files);
 
-    expect(oFiles).to.deep.equal(files);
+		expect(oFiles).to.deep.equal(files);
 
-    cache.reconcile();
+		cache.reconcile();
 
-    oFiles = cache.getUpdatedFiles(files);
+		oFiles = cache.getUpdatedFiles(files);
 
-    expect(oFiles).to.deep.equal([]);
-  });
+		expect(oFiles).to.deep.equal([]);
+	});
 
-  it('should return none, if no files were modified', function () {
-    cache = fileEntryCache.create('testCache');
+	it('should return none, if no files were modified', () => {
+		cache = fileEntryCache.create('testCache');
 
-    var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-    var oFiles = cache.getUpdatedFiles(files);
+		const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+		let oFiles = cache.getUpdatedFiles(files);
 
-    expect(oFiles).to.deep.equal(files);
+		expect(oFiles).to.deep.equal(files);
 
-    cache.reconcile();
+		cache.reconcile();
 
-    oFiles = cache.getUpdatedFiles(files);
-    expect(oFiles).to.deep.equal([]);
+		oFiles = cache.getUpdatedFiles(files);
+		expect(oFiles).to.deep.equal([]);
 
-    cache.deleteCacheFile();
-  });
+		cache.deleteCacheFile();
+	});
 
-  it('should return only modified files the second time the method is called', function () {
-    cache = fileEntryCache.create('testCache');
+	it('should return only modified files the second time the method is called', () => {
+		cache = fileEntryCache.create('testCache');
 
-    var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-    var oFiles = cache.getUpdatedFiles(files);
+		const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+		let oFiles = cache.getUpdatedFiles(files);
 
-    expect(oFiles).to.deep.equal(files);
+		expect(oFiles).to.deep.equal(files);
 
-    cache.reconcile();
+		cache.reconcile();
 
-    // modify a file
-    write(path.resolve(fixturesDir, fixtureFiles[1].name), fixtureFiles[1].content + 'modified!!!');
+		// Modify a file
+		write(path.resolve(fixturesDir, fixtureFiles[1].name), fixtureFiles[1].content + 'modified!!!');
 
-    cache = fileEntryCache.create('testCache');
+		cache = fileEntryCache.create('testCache');
 
-    oFiles = cache.getUpdatedFiles(files);
+		oFiles = cache.getUpdatedFiles(files);
 
-    expect(oFiles).to.deep.equal([path.resolve(__dirname, '../fixtures/f2.txt')]);
+		expect(oFiles).to.deep.equal([path.resolve(__dirname, '../fixtures/f2.txt')]);
 
-    cache.deleteCacheFile();
-  });
+		cache.deleteCacheFile();
+	});
 
-  it('should allow to delete an entry from the cache so the next time `getUpdatedFiles` is called the entry will be considered modified', function () {
-    cache = fileEntryCache.create('testCache');
+	it('should allow to delete an entry from the cache so the next time `getUpdatedFiles` is called the entry will be considered modified', () => {
+		cache = fileEntryCache.create('testCache');
 
-    var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-    var oFiles = cache.getUpdatedFiles(files);
+		const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+		let oFiles = cache.getUpdatedFiles(files);
 
-    expect(oFiles).to.deep.equal(files);
+		expect(oFiles).to.deep.equal(files);
 
-    cache.removeEntry(path.resolve(__dirname, '../fixtures/f1.txt'));
+		cache.removeEntry(path.resolve(__dirname, '../fixtures/f1.txt'));
 
-    cache.reconcile();
+		cache.reconcile();
 
-    // modify a file
-    write(path.resolve(fixturesDir, fixtureFiles[1].name), fixtureFiles[1].content + 'modified!!!');
+		// Modify a file
+		write(path.resolve(fixturesDir, fixtureFiles[1].name), fixtureFiles[1].content + 'modified!!!');
 
-    cache = fileEntryCache.create('testCache');
+		cache = fileEntryCache.create('testCache');
 
-    oFiles = cache.getUpdatedFiles(files);
+		oFiles = cache.getUpdatedFiles(files);
 
-    expect(oFiles).to.deep.equal([
-      path.resolve(__dirname, '../fixtures/f1.txt'),
-      path.resolve(__dirname, '../fixtures/f2.txt'),
-    ]);
+		expect(oFiles).to.deep.equal([
+			path.resolve(__dirname, '../fixtures/f1.txt'),
+			path.resolve(__dirname, '../fixtures/f2.txt'),
+		]);
 
-    cache.deleteCacheFile();
-  });
+		cache.deleteCacheFile();
+	});
 
-  it('should not fail if an array is not passed to the `getChangedFiles` method', function () {
-    cache = fileEntryCache.create('testCache2');
-    var files = cache.getUpdatedFiles(null);
-    cache.reconcile();
-    expect(files).to.deep.equal([]);
-  });
+	it('should not fail if an array is not passed to the `getChangedFiles` method', () => {
+		cache = fileEntryCache.create('testCache2');
+		const files = cache.getUpdatedFiles(null);
+		cache.reconcile();
+		expect(files).to.deep.equal([]);
+	});
 
-  it('should not fail if calling reconcile without a prior call to `getChangedFiles` or `normalizeEntries`', function () {
-    cache = fileEntryCache.create('testCache2');
+	it('should not fail if calling reconcile without a prior call to `getChangedFiles` or `normalizeEntries`', () => {
+		cache = fileEntryCache.create('testCache2');
 
-    expect(function () {
-      cache.reconcile();
-    }).not.to.throw;
-  });
+		expect(() => {
+			cache.reconcile();
+		}).not.to.throw;
+	});
 
-  describe('normalizeEntries', function () {
-    it('should return fileDescriptor for all the passed files when using normalizeEntries', function () {
-      cache = fileEntryCache.create('testCache');
+	describe('normalizeEntries', () => {
+		it('should return fileDescriptor for all the passed files when using normalizeEntries', () => {
+			cache = fileEntryCache.create('testCache');
 
-      var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-      var oFiles = cache.normalizeEntries(files);
+			const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+			const oFiles = cache.normalizeEntries(files);
 
-      expect(oFiles.length).to.equal(4);
-      oFiles.forEach(function (file) {
-        expect(file.changed).to.be.true;
-      });
-    });
+			expect(oFiles.length).to.equal(4);
+			for (const file of oFiles) {
+				expect(file.changed).to.be.true;
+			}
+		});
 
-    it('should not remove non visited entries from the cache', function () {
-      cache = fileEntryCache.create('testCache');
+		it('should not remove non visited entries from the cache', () => {
+			cache = fileEntryCache.create('testCache');
 
-      var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-      cache.normalizeEntries(files);
+			const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+			cache.normalizeEntries(files);
 
-      cache.reconcile();
+			cache.reconcile();
 
-      // the f2.txt file is in the cache
-      expect(cache.cache.getKey(path.resolve(__dirname, '../fixtures/f2.txt'))).to.not.equal(undefined);
+			// The f2.txt file is in the cache
+			expect(cache.cache.getKey(path.resolve(__dirname, '../fixtures/f2.txt'))).to.not.equal(undefined);
 
-      // load the cache again
-      cache = fileEntryCache.create('testCache');
+			// Load the cache again
+			cache = fileEntryCache.create('testCache');
 
-      // when recently loaded all entries are in the cache
-      expect(cache.cache.keys().length).to.equal(4);
+			// When recently loaded all entries are in the cache
+			expect(cache.cache.keys().length).to.equal(4);
 
-      // we check only one file
-      expect(cache.hasFileChanged(path.resolve(__dirname, '../fixtures/f4.txt'))).to.be.false;
+			// We check only one file
+			expect(cache.hasFileChanged(path.resolve(__dirname, '../fixtures/f4.txt'))).to.be.false;
 
-      cache.reconcile();
+			cache.reconcile();
 
-      // after reconcile we will only have 1 key because we just visited one entry
-      expect(cache.cache.getKey(path.resolve(__dirname, '../fixtures/f2.txt'))).to.not.equal(undefined);
-      expect(cache.cache.keys().length).to.equal(4);
-    });
+			// After reconcile we will only have 1 key because we just visited one entry
+			expect(cache.cache.getKey(path.resolve(__dirname, '../fixtures/f2.txt'))).to.not.equal(undefined);
+			expect(cache.cache.keys().length).to.equal(4);
+		});
 
-    it('should not persist files that do not exist', function () {
-      cache = fileEntryCache.create('testCache');
+		it('should not persist files that do not exist', () => {
+			cache = fileEntryCache.create('testCache');
 
-      var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-      cache.normalizeEntries(files);
+			const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+			cache.normalizeEntries(files);
 
-      deleteFileSync(path.resolve(__dirname, '../fixtures/f2.txt'));
+			deleteFileSync(path.resolve(__dirname, '../fixtures/f2.txt'));
 
-      cache.reconcile();
+			cache.reconcile();
 
-      // the f2.txt file is in the cache
-      expect(cache.cache.getKey(path.resolve(__dirname, '../fixtures/f2.txt'))).to.equal(undefined);
+			// The f2.txt file is in the cache
+			expect(cache.cache.getKey(path.resolve(__dirname, '../fixtures/f2.txt'))).to.equal(undefined);
 
-      // now delete the entry
-      deleteFileSync(path.resolve(__dirname, '../fixtures/f3.txt'));
+			// Now delete the entry
+			deleteFileSync(path.resolve(__dirname, '../fixtures/f3.txt'));
 
-      // load the cache again
-      cache = fileEntryCache.create('testCache');
+			// Load the cache again
+			cache = fileEntryCache.create('testCache');
 
-      // when recently loaded all entries that exists are in the cache, f3 should not be there
-      expect(cache.cache.keys().length).to.equal(2);
+			// When recently loaded all entries that exists are in the cache, f3 should not be there
+			expect(cache.cache.keys().length).to.equal(2);
 
-      expect(cache.cache.getKey(path.resolve(__dirname, '../fixtures/f3.txt'))).to.equal(undefined);
+			expect(cache.cache.getKey(path.resolve(__dirname, '../fixtures/f3.txt'))).to.equal(undefined);
 
-      // we check only one file
-      expect(cache.hasFileChanged(path.resolve(__dirname, '../fixtures/f4.txt'))).to.be.false;
+			// We check only one file
+			expect(cache.hasFileChanged(path.resolve(__dirname, '../fixtures/f4.txt'))).to.be.false;
 
-      cache.reconcile();
+			cache.reconcile();
 
-      expect(cache.cache.keys().length).to.equal(2);
-    });
+			expect(cache.cache.keys().length).to.equal(2);
+		});
 
-    it('should return fileDescriptor for all the passed files', function () {
-      cache = fileEntryCache.create('testCache');
+		it('should return fileDescriptor for all the passed files', () => {
+			cache = fileEntryCache.create('testCache');
 
-      var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-      var oFiles = cache.normalizeEntries(files);
+			const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+			let oFiles = cache.normalizeEntries(files);
 
-      cache.reconcile();
+			cache.reconcile();
 
-      // modify a file
-      write(path.resolve(fixturesDir, fixtureFiles[2].name), fixtureFiles[2].content + 'modified!!!');
+			// Modify a file
+			write(path.resolve(fixturesDir, fixtureFiles[2].name), fixtureFiles[2].content + 'modified!!!');
 
-      oFiles = cache.normalizeEntries(files);
+			oFiles = cache.normalizeEntries(files);
 
-      expect(oFiles.length).to.equal(4);
+			expect(oFiles.length).to.equal(4);
 
-      var changedFile = oFiles.filter(function (entry) {
-        return entry.changed;
-      });
+			const changedFile = oFiles.find(entry => entry.changed);
 
-      expect(changedFile[0].key).to.contains(fixtureFiles[2].name);
-    });
+			expect(changedFile.key).to.contains(fixtureFiles[2].name);
+		});
 
-    it('should not fail if a null array of files is passed', function () {
-      cache = fileEntryCache.create('testCache');
-      var oFiles = cache.normalizeEntries(null);
-      expect(oFiles).to.deep.equal([]);
-    });
-  });
+		it('should not fail if a null array of files is passed', () => {
+			cache = fileEntryCache.create('testCache');
+			const oFiles = cache.normalizeEntries(null);
+			expect(oFiles).to.deep.equal([]);
+		});
+	});
 
-  describe('saving custom metadata', function () {
-    var cache2;
-    // eslint-disable-next-line mocha/no-hooks-for-single-case
-    afterEach(function () {
-      cache2 && cache2.deleteCacheFile();
-    });
+	describe('saving custom metadata', () => {
+		let cache2;
+		afterEach(() => {
+			cache2 && cache2.deleteCacheFile();
+		});
 
-    it('should allow persist custom data in the entries', function () {
-      cache = fileEntryCache.create('cache-1');
+		it('should allow persist custom data in the entries', () => {
+			cache = fileEntryCache.create('cache-1');
 
-      var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-      var entries = cache.normalizeEntries(files);
+			const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+			let entries = cache.normalizeEntries(files);
 
-      entries[1].meta.data = { foo: 'bar' };
-      entries[2].meta.data = {
-        baz: {
-          some: 'foo',
-        },
-      };
+			entries[1].meta.data = {foo: 'bar'};
+			entries[2].meta.data = {
+				baz: {
+					some: 'foo',
+				},
+			};
 
-      cache.reconcile();
+			cache.reconcile();
 
-      cache2 = fileEntryCache.create('cache-1');
-      entries = cache2.normalizeEntries(files);
+			cache2 = fileEntryCache.create('cache-1');
+			entries = cache2.normalizeEntries(files);
 
-      expect(entries[1].meta.data.foo).to.equal('bar');
-      expect(entries[2].meta.data.baz).to.deep.equal({
-        some: 'foo',
-      });
-    });
-  });
+			expect(entries[1].meta.data.foo).to.equal('bar');
+			expect(entries[2].meta.data.baz).to.deep.equal({
+				some: 'foo',
+			});
+		});
+	});
 
-  describe('getFileDescriptor', function () {
-    it('should tell when file known to the cache is not found anymore ', function () {
-      var file = path.resolve(__dirname, '../fixtures/', fixtureFiles[0].name);
-      cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
+	describe('getFileDescriptor', () => {
+		it('should tell when file known to the cache is not found anymore ', () => {
+			const file = path.resolve(__dirname, '../fixtures/', fixtureFiles[0].name);
+			cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
 
-      cache.getFileDescriptor(file);
-      cache.reconcile();
-      deleteFileSync(file);
-      expect(cache.getFileDescriptor(file).notFound).to.be.true;
-    });
-  });
+			cache.getFileDescriptor(file);
+			cache.reconcile();
+			deleteFileSync(file);
+			expect(cache.getFileDescriptor(file).notFound).to.be.true;
+		});
+	});
 
-  describe('analyzeFiles', function () {
-    it('should return correct information about files ', function () {
-      var filenames = fixtureFiles.map(function (fixtureFile) {
-        return path.resolve(__dirname, '../fixtures/', fixtureFile.name);
-      });
-      var expectedBeforeChanges = {
-        changedFiles: filenames,
-        notFoundFiles: [],
-        notChangedFiles: [],
-      };
-      var expectedAfterChanges = {
-        changedFiles: [filenames[0]],
-        notFoundFiles: [filenames[1]],
-        notChangedFiles: [filenames[2], filenames[3]],
-      };
-      cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
+	describe('analyzeFiles', () => {
+		it('should return correct information about files ', () => {
+			const filenames = fixtureFiles.map(fixtureFile => path.resolve(__dirname, '../fixtures/', fixtureFile.name));
+			const expectedBeforeChanges = {
+				changedFiles: filenames,
+				notFoundFiles: [],
+				notChangedFiles: [],
+			};
+			const expectedAfterChanges = {
+				changedFiles: [filenames[0]],
+				notFoundFiles: [filenames[1]],
+				notChangedFiles: [filenames[2], filenames[3]],
+			};
+			cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
 
-      expect(cache.analyzeFiles(filenames)).to.deep.equal(expectedBeforeChanges);
-      cache.reconcile();
+			expect(cache.analyzeFiles(filenames)).to.deep.equal(expectedBeforeChanges);
+			cache.reconcile();
 
-      write(filenames[0], 'everybody can change');
-      deleteFileSync(filenames[1]);
+			write(filenames[0], 'everybody can change');
+			deleteFileSync(filenames[1]);
 
-      expect(cache.analyzeFiles(filenames)).to.deep.equal(expectedAfterChanges);
-    });
-  });
+			expect(cache.analyzeFiles(filenames)).to.deep.equal(expectedAfterChanges);
+		});
+	});
 
-  describe('handling no valid buffer on cache', function () {
-    it('should error when not valid and set buffer to nothing', function () {
-      var newCache = require('../../cache.js').create('testCache1');
-      var result = newCache._getFileDescriptorUsingChecksum('foo');
-      expect(result.key).to.equal('foo');
-    });
-  });
+	describe('handling no valid buffer on cache', () => {
+		it('should error when not valid and set buffer to nothing', () => {
+			const newCache = require('../../cache.js').create('testCache1');
+			const result = newCache._getFileDescriptorUsingChecksum('foo');
+			expect(result.key).to.equal('foo');
+		});
+	});
 
-  describe('throwing on reconcile', function () {
-    it('should throw on reconcile when not ENOENT', function () {
-      var newCache = fileEntryCache.create('cache-1');
+	describe('throwing on reconcile', () => {
+		it('should throw on reconcile when not ENOENT', () => {
+			const newCache = fileEntryCache.create('cache-1');
 
-      var files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
-      newCache.normalizeEntries(files);
+			const files = expand(path.resolve(__dirname, '../fixtures/*.txt'));
+			newCache.normalizeEntries(files);
 
-      newCache._getMetaForFileUsingMtimeAndSize = function () {
-        var error = new Error('BAM');
-        error.code = 'BAM';
-        throw error;
-      };
+			newCache._getMetaForFileUsingMtimeAndSize = function () {
+				const error = new Error('BAM');
+				error.code = 'BAM';
+				throw error;
+			};
 
-      var error;
+			let error;
 
-      try {
-        newCache.reconcile();
-      } catch (e) {
-        error = e;
-      }
+			try {
+				newCache.reconcile();
+			} catch (error_) {
+				error = error_;
+			}
 
-      expect(error).to.not.equal(undefined);
-    });
-  });
+			expect(error).to.not.equal(undefined);
+		});
+	});
 
-  describe('handling relative paths', function () {
-    it('getFileDescriptor with relative paths', function () {
-      var absoluteFile = path.resolve(__dirname, '../fixtures/', fixtureFiles[0].name);
-      var relativeFile = path.relative(process.cwd(), absoluteFile); // test/fixtures/f1.txt
-      cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
-      expect(cache.getFileDescriptor(absoluteFile).changed).to.be.true;
-      expect(cache.getFileDescriptor(relativeFile).changed).to.be.true;
-    });
+	describe('handling relative paths', () => {
+		it('getFileDescriptor with relative paths', () => {
+			const absoluteFile = path.resolve(__dirname, '../fixtures/', fixtureFiles[0].name);
+			const relativeFile = path.relative(process.cwd(), absoluteFile); // Test/fixtures/f1.txt
+			cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
+			expect(cache.getFileDescriptor(absoluteFile).changed).to.be.true;
+			expect(cache.getFileDescriptor(relativeFile).changed).to.be.true;
+		});
 
-    it('removeEntry with relative paths', function () {
-      var absoluteFile = path.resolve(__dirname, '../fixtures/', fixtureFiles[0].name);
-      var relativeFile = path.relative(process.cwd(), absoluteFile); // test/fixtures/f1.txt
-      cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
-      cache.removeEntry(relativeFile);
-      cache.reconcile();
-      expect(cache.hasFileChanged(relativeFile)).to.be.true;
-    });
-  });
+		it('removeEntry with relative paths', () => {
+			const absoluteFile = path.resolve(__dirname, '../fixtures/', fixtureFiles[0].name);
+			const relativeFile = path.relative(process.cwd(), absoluteFile); // Test/fixtures/f1.txt
+			cache = fileEntryCache.createFromFile('../fixtures/.eslintcache');
+			cache.removeEntry(relativeFile);
+			cache.reconcile();
+			expect(cache.hasFileChanged(relativeFile)).to.be.true;
+		});
+	});
 });
