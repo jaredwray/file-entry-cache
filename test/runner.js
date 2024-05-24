@@ -1,39 +1,41 @@
-// we run mocha manually otherwise istanbul coverage won't work
+/* eslint-disable import/order, unicorn/no-process-exit */
+// We run mocha manually otherwise istanbul coverage won't work
 // run `npm test --coverage` to generate coverage report
 
-var Mocha = require('mocha');
+const Mocha = require('mocha');
 
-// to set these options run the test script like:
+// To set these options run the test script like:
 //  > BAIL=true GREP=array_expression REPORTER=dot npm test
-var opts = {
-  ui: 'bdd',
-  bail: !!process.env.BAIL,
-  reporter: process.env.REPORTER || 'spec',
-  grep: process.env.GREP,
-  colors: true,
+const options = {
+	ui: 'bdd',
+	bail: Boolean(process.env.BAIL),
+	reporter: process.env.REPORTER || 'spec',
+	grep: process.env.GREP,
+	colors: true,
 };
 
-// we use the dot reporter on travis since it works better
+// We use the dot reporter on travis since it works better
 if (process.env.TRAVIS) {
-  opts.reporter = 'dot';
+	options.reporter = 'dot';
 }
 
-var m = new Mocha(opts);
+const m = new Mocha(options);
 
 if (process.env.INVERT) {
-  m.invert();
+	m.invert();
 }
 
-var expand = require('glob-expand');
-expand('test/specs/**/*.js').forEach(function (file) {
-  m.addFile(file);
-});
+const expand = require('glob-expand');
 
-m.run(function (err) {
-  var exitCode = err ? 1 : 0;
-  if (err) {
-    console.log('failed tests: ' + err);
-  }
+for (const file of expand('test/specs/**/*.js')) {
+	m.addFile(file);
+}
 
-  process.exit( exitCode ); // eslint-disable-line
+m.run(error => {
+	const exitCode = error ? 1 : 0;
+	if (error) {
+		console.log('failed tests: ' + error);
+	}
+
+	process.exit(exitCode);
 });
