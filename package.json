@@ -13,7 +13,7 @@
     "cache.js"
   ],
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18"
   },
   "scripts": {
     "eslint": "eslint --cache --cache-location=node_modules/.cache/ 'cache.js' 'test/**/*.js' 'perf.js'",
@@ -51,6 +51,6 @@
     "write": "^2.0.0"
   },
   "dependencies": {
-    "flat-cache": "^4.0.0"
+    "flat-cache": "^5.0.0"
   }
 }
