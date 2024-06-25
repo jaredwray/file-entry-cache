@@ -4,13 +4,13 @@ const process = require('node:process');
 const crypto = require('node:crypto');
 
 module.exports = {
-	createFromFile(filePath, useChecksum) {
+	createFromFile(filePath, useChecksum, relativePath) {
 		const fname = path.basename(filePath);
 		const dir = path.dirname(filePath);
-		return this.create(fname, dir, useChecksum);
+		return this.create(fname, dir, useChecksum, relativePath);
 	},
 
-	create(cacheId, _path, useChecksum) {
+	create(cacheId, _path, useChecksum, relativePath) {
 		const fs = require('node:fs');
 		const flatCache = require('flat-cache');
 		const cache = flatCache.load(cacheId, _path);
@@ -34,40 +34,46 @@ module.exports = {
 
 		return {
 			/**
-       * The flat cache storage used to persist the metadata of the `files
-       * @type {Object}
-       */
+	   * The flat cache storage used to persist the metadata of the `files
+	   * @type {Object}
+	   */
 			cache,
 
 			/**
-       * Given a buffer, calculate md5 hash of its content.
-       * @method getHash
-       * @param  {Buffer} buffer   buffer to calculate hash on
-       * @return {String}          content hash digest
-       */
+			* The relative path to the current working directory
+			* @type {Object}
+			*/
+			relativePath: relativePath ?? process.cwd(),
+
+			/**
+	   * Given a buffer, calculate md5 hash of its content.
+	   * @method getHash
+	   * @param  {Buffer} buffer   buffer to calculate hash on
+	   * @return {String}          content hash digest
+	   */
 			getHash(buffer) {
 				return crypto.createHash('md5').update(buffer).digest('hex');
 			},
 
 			/**
-       * Return whether or not a file has changed since last time reconcile was called.
-       * @method hasFileChanged
-       * @param  {String}  file  the filepath to check
-       * @return {Boolean}       wheter or not the file has changed
-       */
+	   * Return whether or not a file has changed since last time reconcile was called.
+	   * @method hasFileChanged
+	   * @param  {String}  file  the filepath to check
+	   * @return {Boolean}       wheter or not the file has changed
+	   */
 			hasFileChanged(file) {
 				return this.getFileDescriptor(file).changed;
 			},
 
 			/**
-       * Given an array of file paths it return and object with three arrays:
-       *  - changedFiles: Files that changed since previous run
-       *  - notChangedFiles: Files that haven't change
-       *  - notFoundFiles: Files that were not found, probably deleted
-       *
-       * @param  {Array} files the files to analyze and compare to the previous seen files
-       * @return {[type]}       [description]
-       */
+	   * Given an array of file paths it return and object with three arrays:
+	   *  - changedFiles: Files that changed since previous run
+	   *  - notChangedFiles: Files that haven't change
+	   *  - notFoundFiles: Files that were not found, probably deleted
+	   *
+	   * @param  {Array} files the files to analyze and compare to the previous seen files
+	   * @return {[type]}       [description]
+	   */
 			analyzeFiles(files) {
 				const me = this;
 				files ||= [];
@@ -100,7 +106,7 @@ module.exports = {
 
 				try {
 					if (!path.isAbsolute(file)) {
-						file = path.resolve(process.cwd(), file);
+						file = path.resolve(this.relativePath, file);
 					}
 
 					fstat = fs.statSync(file);
@@ -172,13 +178,13 @@ module.exports = {
 			},
 
 			/**
-       * Return the list o the files that changed compared
-       * against the ones stored in the cache
-       *
-       * @method getUpdated
-       * @param files {Array} the array of files to compare against the ones in the cache
-       * @returns {Array}
-       */
+	   * Return the list o the files that changed compared
+	   * against the ones stored in the cache
+	   *
+	   * @method getUpdated
+	   * @param files {Array} the array of files to compare against the ones in the cache
+	   * @returns {Array}
+	   */
 			getUpdatedFiles(files) {
 				const me = this;
 				files ||= [];
@@ -190,11 +196,11 @@ module.exports = {
 			},
 
 			/**
-       * Return the list of files
-       * @method normalizeEntries
-       * @param files
-       * @returns {*}
-       */
+	   * Return the list of files
+	   * @method normalizeEntries
+	   * @param files
+	   * @returns {*}
+	   */
 			normalizeEntries(files) {
 				files ||= [];
 
@@ -206,15 +212,15 @@ module.exports = {
 			},
 
 			/**
-       * Remove an entry from the file-entry-cache. Useful to force the file to still be considered
-       * modified the next time the process is run
-       *
-       * @method removeEntry
-       * @param entryName
-       */
+	   * Remove an entry from the file-entry-cache. Useful to force the file to still be considered
+	   * modified the next time the process is run
+	   *
+	   * @method removeEntry
+	   * @param entryName
+	   */
 			removeEntry(entryName) {
 				if (!path.isAbsolute(entryName)) {
-					entryName = path.resolve(process.cwd(), entryName);
+					entryName = path.resolve(this.relativePath, entryName);
 				}
 
 				delete normalizedEntries[entryName];
@@ -222,16 +228,16 @@ module.exports = {
 			},
 
 			/**
-       * Delete the cache file from the disk
-       * @method deleteCacheFile
-       */
+	   * Delete the cache file from the disk
+	   * @method deleteCacheFile
+	   */
 			deleteCacheFile() {
 				cache.removeCacheFile();
 			},
 
 			/**
-       * Remove the cache from the file and clear the memory cache
-       */
+	   * Remove the cache from the file and clear the memory cache
+	   */
 			destroy() {
 				normalizedEntries = {};
 				cache.destroy();
@@ -257,9 +263,9 @@ module.exports = {
 			},
 
 			/**
-       * Sync the files and persist them to the cache
-       * @method reconcile
-       */
+	   * Sync the files and persist them to the cache
+	   * @method reconcile
+	   */
 			reconcile(noPrune) {
 				removeNotFoundFiles();
 
