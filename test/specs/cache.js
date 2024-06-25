@@ -445,5 +445,23 @@ describe('file-entry-cache', () => {
 			cache.reconcile();
 			expect(cache.hasFileChanged(relativeFile)).to.be.true;
 		});
+
+		it('should set the cwd to the cache', () => {
+			cache = fileEntryCache.createFromFile('../fixtures/.eslintcache', true);
+			expect(cache.relativePath).to.equal(process.cwd());
+		});
+
+		it('should set the cwd to the cache to any file path', () => {
+			cache = fileEntryCache.createFromFile('../fixtures/.eslintcache', true, 'foo/path/bar');
+			expect(cache.relativePath).to.equal('foo/path/bar');
+		});
+
+		it('getFileDescriptor with set relative path', () => {
+			const absoluteFile = path.resolve(__dirname, '../fixtures/', fixtureFiles[0].name);
+			const relativeFile = path.relative(process.cwd(), absoluteFile); // Test/fixtures/f1.txt
+			cache = fileEntryCache.createFromFile('../fixtures/.eslintcache', true, 'foo/path/bar');
+			const result = cache.getFileDescriptor(relativeFile);
+			expect(result.notFound).to.be.true;
+		});
 	});
 });
