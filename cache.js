@@ -65,7 +65,7 @@ module.exports = {
 				return this.getFileDescriptor(file).changed;
 			},
 
-       /**
+			/**
 	   * Given an array of file paths it return and object with three arrays:
 	   *  - changedFiles: Files that changed since previous run
 	   *  - notChangedFiles: Files that haven't change
